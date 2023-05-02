@@ -59,7 +59,7 @@ Submodule (RoadSurf) ValueControl
              .or. modelInput%LW(i) < -0.1 .or. modelInput%LW(i) > 1000.0 &
              .or. modelInput%prec(i) < -0.1 .or. modelInput%prec(i) > 500.0) Then
       
-            write (*, *) "BAD input value! ", settings%statID, modelInput%Tair(i), &
+            write (*, *) "BAD input value! ",  modelInput%Tair(i), &
                modelInput%Tdew(i),modelInput%RHz(i), modelInput%VZ(i), modelInput%SW(i),&
                modelInput%LW(i),  modelInput%prec(i)
             settings%simulation_failed = .true.

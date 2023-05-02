@@ -84,10 +84,6 @@ InputModelSettings::InputModelSettings(const Json::Value &pJson, const Options &
     override(&use_relaxation, json, "use_relaxation");
     override(&DTSecs, json, "DTSecs");
     override(&tsurfOutputDepth, json, "tsurfOutputDepth");
-    override(&thread, json, "thread");
-    override(&statID, json, "statID");
-    override(&simID, json, "simID");
-    override(&use_iterative_heat_balance, json, "use_iterative_heat_balance");
     override(&couplingEffectReduction, json, "couplingEffectReduction");
   }
   const auto json2 = pJson.get("output", nulljson);

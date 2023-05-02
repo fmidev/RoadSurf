@@ -31,45 +31,26 @@ Submodule (RoadSurf) BalanceModel
          integer, intent(IN)::inputIdx                    !< Index in input data
          real(8) ::depth                                  !< depth to take temperature
          real(8) :: t_output                              !< temperature at depth
-         !Set true if heat balance equation is solved using Crank-Nicholson scheme
-         !settings%use_iterative_heat_balance=.true.
          !Set traffic friction and check that wind is not below minimum
          call SetDayDependendVariables(settings, surf, modelInput, atm, inputIdx)
       
-         !Check if iterative heat balance calculation is used
-         !Gives similar results as normal solution, so non iterative
-         !method is recommended
-         if (settings%use_iterative_heat_balance) Then
-            !Calculate boundary layer conductance
-            call CalcBLCondAndLE(surf%TSurfAve, surf%EvapmmTS, settings%DtSecs, &
-                                 surf%SrfWatmms, phy, atm)
-            
-            !Calculate net radiation
-            Call CalcRNet(phy%Emiss, phy%SB_Const, surf%TSurfAve, ground%Albedo, SWi, &
-                          LWi, atm%RNet, coupling%SwRadCof, coupling%LwRadCof)
-      
-           !Calculate temperature profile iteratively
-            call CalcProfileIterative(settings, phy, ground, atm, coupling, modelInput,&
-                                      surf, SWi, LWi, inputIdx)
-         else
          !Calculate boundary layer conductance
-            call CalcBLCondAndLE(surf%TSurfAve, surf%EvapmmTS, settings%DtSecs, &
-                                 surf%SrfWatmms, phy, atm)
+         call CalcBLCondAndLE(surf%TSurfAve, surf%EvapmmTS, settings%DtSecs, &
+                              surf%SrfWatmms, phy, atm)
       
-            !Calculate net radiation
-            Call CalcRNet(phy%Emiss, phy%SB_Const, surf%TSurfAve, ground%Albedo, SWi, &
-                          LWi, atm%RNet, coupling%SwRadCof, coupling%LwRadCof)
-            !Calculate heat capacity and conductance
-            call CalcHCapHCond(settings%NLayers, settings%DTSecs, phy, ground, atm)
+         !Calculate net radiation
+         Call CalcRNet(phy%Emiss, phy%SB_Const, surf%TSurfAve, ground%Albedo, SWi, &
+                       LWi, atm%RNet, coupling%SwRadCof, coupling%LwRadCof)
+         !Calculate heat capacity and conductance
+         call CalcHCapHCond(settings%NLayers, settings%DTSecs, phy, ground, atm)
       
-            !Calculate heat capacity and conductance derivatives
-            call calcCapDZCondDZ(settings%NLayers, ground)
+         !Calculate heat capacity and conductance derivatives
+         call calcCapDZCondDZ(settings%NLayers, ground)
       
-            !Calculate temperature profile for the next time step
-            call calcProfile(settings%Nlayers, settings%DTSecs, surf%TrfFric, &
-                             ground, atm)
+         !Calculate temperature profile for the next time step
+         call calcProfile(settings%Nlayers, settings%DTSecs, surf%TrfFric, &
+                          ground, atm)
       
-         end if
       
          !Calculate heat storage
          call calcHStor(ground)
@@ -100,97 +81,6 @@ Submodule (RoadSurf) BalanceModel
       
       End Subroutine
 end submodule
-!> Calculates temperature profile using time centered Crank-Nicholson shceme,
-!> solved with Newton-Raphson and  Thomas-Algorithm
-!> The results are very similar as obtained with non iterative method so the
-!> non iterative mehtod is recommented
-Subroutine CalcProfileIterative(settings, phy, ground, atm, coupling, modelInput,&
- surf, SWi, LWi, inputIdx)
-   use RoadSurfVariables
-   Implicit None
-
-   real(8), intent(IN) :: SWi                       !< Downwelling short wave
-                                                    !< radiation
-   real(8), intent(IN) :: LWi                       !< Downwelling long wave
-                                                    !< radiation
-   integer, intent(IN) :: inputIdx
-
-   type(inputArrays), intent(IN) :: modelInput      !< Model input arrays
-   type(couplingVariables), intent(IN) :: coupling  !< variables used in coupling
-   type(modelSettings), intent(INOUT) :: settings   !< Variables for model settings
-   type(physicalParameters), intent(INOUT) :: phy   !< Physical paremeters used
-                                                    !< in the model
-   type(groundVariables), intent(INOUT) :: ground   !< Varibales for ground
-                                                    !< properties
-   type(atmVariables), intent(INOUT) :: atm         !< Variables for atmospheric
-                                                    !< properties
-   type(surfaceVariables), intent(INOUT) :: surf    !< Variables for surface
-                                                    !< properties
-
-   Integer :: ItrCnt
-   Real(8), Parameter :: ItrMax = 30                !< Maximum no energy balance
-                                                    !< iterations
-   Real(8), Parameter :: BalLim = 10                !< Energy balance limit (W/m2)
-   Real(8) :: EnBal                                 !< Energy balance
-   Real(8)       :: depth                           !< depth to interpolate temperature
-   Real(8)       :: t_output                        !< Temperatreu iterated at depth
-   ItrCnt = 0
-   EnBal = 0
-
-   !Newton-Raphson method:
-   !Campbell, Gaylon S., Soil Physics wit Basic. Elsevier, 
-   !the Netherlands, 1985, p.32
-   !Fougstedt, Bengtm, En studie ver temperaturen i jordmånen, Master's Thesis,
-   !University of Helsinki 1992
-
-   !Thomas algorithm
-   !Conte, S. D. amd Carö de Boor, Elementary numerical Analysis: Algorithmic
-   !Approach, Third edtion, McGraw-Hill, USA, 1980
-
-   !Continue heat balance iteration
-
-   ground%TmpNw = ground%Tmp
-
-   Do while (ItrCnt <= ItrMax)
-
-      !Calculate heat capacity and conductance
-      call CalcHCapHCond(settings%NLayers, settings%DTSecs, phy, ground, atm)
-      phy%LVap = -2364.49*(ground%TmpNw(1) + 273.15) + 3.14676e+6
-
-      !Calculate temperature profile for the next time step
-      call calcProfileCrankNicholson(ground, phy, modelInput, settings, atm, &
-                                     inputIdx, surf%TrfFric, EnBal)
-
-      If (EnBal > BalLim) Then ! Continue iteration
-
-         depth=modelInput%depth(InputIdx)
-         if (depth>=0)Then
-               Call getTempAtDepth(ground%TmpNw,ground%ZDpth,depth,t_output)
-               surf%TsurfAve=t_output
-         else
-               surf%TSurfAve = 0.5*(ground%TmpNw(1) + ground%TmpNw(2))
-         end if
-         !Calculate boundary layer conductance
-         call CalcBLCondAndLE(surf%TSurfAve, surf%EvapmmTS, settings%DtSecs, &
-                              surf%SrfWatmms, phy, atm)
-         !Calculate net radiation
-         Call CalcRNet(phy%Emiss, phy%SB_Const, surf%TSurfAve, ground%Albedo, SWi, &
-                       LWi, atm%RNet, coupling%SwRadCof, coupling%LwRadCof)
-
-         ItrCnt = ItrCnt + 1 ! Next iteration round
-
-      else
-         EXIT
-      end if
-
-      If (ItrCnt > ItrMax) Then
-         settings%simulation_failed = .True.
-         write (*, *) "Energy balance not achieved, abort simulation", settings%SimID,&
-          settings%statID
-      end if
-   End do
-
-End subroutine CalcProfileIterative
 
 !>Calculates temperature profile one time step forward
 Subroutine calcProfile(Nlayers, DTSecs, TrfFric, ground, atm)
@@ -426,93 +316,6 @@ Subroutine calcHStor(ground)
 
    ground%HStor = ground%HS(1)*(TN1Ave - T1Ave)
 End Subroutine
-
-!>Calculate profile for the next time step using time-centered
-!>Crank–Nicholson scheme solved with Newton-Raphson method and
-!>Thomas algorithm
-!>Gives similar results as the normal method
-subroutine calcProfileCrankNicholson(ground, phy, modelInput, settings, &
-                                     atm, inputI,TrfFric, EnBal)
-   use RoadSurfVariables
-   Implicit None
-
-   type(physicalParameters), intent(IN) :: phy  !< Physical paremeters used in
-                                                !< the model
-   type(inputArrays), intent(IN) :: modelInput  !< Arrays for model input data
-   type(modelSettings), intent(IN) :: settings  !< Variables for model settings
-   type(atmVariables), intent(IN) :: atm        !< Variables for atmospheric
-                                                !< properties
-   Integer, intent(IN) :: inputI                !< Input data index
-   Real(8), intent(IN):: TrfFric                   !< Surface heating caused by traffic
-   type(groundVariables), intent(INOUT) :: ground !< Varibales for ground properties
-   Real(8), intent(INOUT) :: EnBal                 !< Energy balance residual
-
-   Real(8)          :: T1ave, TN1Ave
-   Real(8)          :: BVar(20), DVar(20)
-   Real(8)          :: DDTVar(20)
-   Integer       :: juld, i
-
-   !Newton-Raphson method:
-   !Campbell, Gaylon S., Soil Physics wit Basic. Elsevier, 
-   !the Netherlands, 1985, p.32
-   !Fougstedt, Bengtm, En studie ver temperaturen i jordmånen, Master's Thesis,
-   !University of Helsinki 1992
-
-   !Thomas algorithm
-   !Conte, S. D. amd Carö de Boor, Elementary numerical Analysis: Algorithmic
-   !Approach, Third edtion, McGraw-Hill, USA, 1980
-
-   EnBal = 0 ! Reset residual
-
-   Call JulDay(modelInput, juld, inputI)
-
-   ! ************* HEAT FLOW EQUATION
-   ! Surface layer heat storage calculated by averaging
-
-   Do I = 1, settings%NLayers
-      BVar(I) = -ground%GCond(I) - ground%GCond(I - 1) - ground%HS(I)
-      If (I == 1) Then ! Surface layer
-         T1Ave = (ground%Tmp(1) + 3.*ground%Tmp(2))/4.
-         TN1Ave = (ground%TmpNw(1) + 3.*ground%TmpNw(2))/4.
-         ground%HStor = ground%HS(1)*(TN1Ave - T1Ave)
-      Else ! Other layers
-         ground%HSTor = ground%HS(I)*(ground%TmpNw(I) - ground%Tmp(I))
-      End If
-      DVar(I) = -ground%GCond(I - 1)*(ground%TmpNw(I) - ground%TmpNw(I - 1)) &
-                + ground%GCond(I)*(ground%TmpNw(I + 1) - ground%TmpNw(I)) -&
-                 ground%HStor
-   End do
-
-!*************** BOUNDARY CONDITIONS
-!   * Surface
-   DVar(1) = DVar(1) + atm%RNet - atm%LE_Flux + TrfFric ! TrFric = traffic friction
-!   * Bottom
-   ground%TmpNw(settings%NLayers + 1) = phy%TClimG &
-         + phy%AZ*Sin(phy%Omega*juld + phy%Omega*(-170) - &
-         (ground%ZDpth(settings%NLayers + 1)/phy%DampDpth))
-
-!*************** ENERGY RESIDUAL
-
-   Do i = 1, settings%NLayers
-      EnBal = EnBal + Abs(DVar(i))
-   end do
-
-!*************** THOMAS ALGORITHM
-! Setting up and solving system of equations for new temperatures (TmpNw)
-
-   Do i = 1, settings%NLayers - 1
-      BVar(i + 1) = BVar(i + 1) - ground%GCond(i)*ground%GCond(i)/BVar(i)
-      DVar(i + 1) = DVar(i + 1) - ground%GCond(i)*DVar(i)/BVar(i)
-   end do
-   DDTVar(settings%NLayers) = DVar(settings%NLayers)/BVar(settings%NLayers)
-   ground%TmpNw(settings%NLayers) = ground%TmpNw(settings%NLayers) -&
-    DDTVar(settings%NLayers)
-   Do i = settings%NLayers - 1, 1, -1
-      DDTVar(i) = (DVar(i) - ground%GCond(i)*DDTVar(i + 1))/BVar(i)
-      ground%TmpNw(i) = ground%TmpNw(i) - DDTVar(i)
-   end do
-
-END SUBROUTINE calcProfileCrankNicholson
 
 !>Calculate julian day
 Subroutine JulDay(modelInput, juday, i)

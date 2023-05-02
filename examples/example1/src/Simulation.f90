@@ -1,5 +1,4 @@
 #include "Constants.h"
-#include "ConstantsExtra.h"
 
 !>Runs road weather model simulation
 SUBROUTINE runsimulation(outputPointers, inputPointers,&
@@ -88,7 +87,7 @@ SUBROUTINE runsimulation(outputPointers, inputPointers,&
       
       !Save output
       call saveOutput(modelOutput, i, surf)
-
+      
       !Coupling control if at the end of the coupling period
       call checkEndCoupling(i, settings, coupling, surf)
 
@@ -161,9 +160,9 @@ Subroutine roadModelOneStep(input_idxI, phy, ground, surf, atm,&
                             modelInput%LW(input_idxI), &
                             phy, ground, surf, atm, settings, coupling, modelInput,&
                             input_idxI,condParam)
-   call wearFactors(condParam%Snow2IceFac, settings%Tph, surf, wearF)
   ! ************* WEAR FACTORS
-   !Calculate storage terms and road condition
+   call wearFactors(condParam%Snow2IceFac, settings%Tph, surf, wearF)
+   !Calculate storage terms 
    call roadCond(phy%MaxPormms, surf, atm, settings, &
                  condParam,wearF)
 

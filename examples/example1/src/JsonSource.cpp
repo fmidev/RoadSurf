@@ -27,7 +27,7 @@ class JsonSource::Impl
   //Get vector containing point ids
   std::vector<int> GetPointIDs() const;
   //Get index of latest observation
-  int GetLatestObsIndex(int statPos) const;
+  int GetLatestObsIndex(int pointID) const;
 
  private:
    std::vector<int> pointIDs;

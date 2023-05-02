@@ -423,9 +423,6 @@ subroutine initSettings(InputSettings, settings,inputParam,localParam)
    settings%InitLenI = localParam%InitLenI
    settings%DTSecs = inputSettings%DTSecs
    settings%tsurfOutputDepth = inputSettings%tsurfOutputDepth
-   settings%statID = inputSettings%statID
-   settings%simID = inputSettings%simID
-   settings%thread = inputSettings%thread
 
    settings%NightOn = inputParam%NightOn 
    settings%NightOff =  inputParam%NightOff
@@ -437,7 +434,6 @@ subroutine initSettings(InputSettings, settings,inputParam,localParam)
 
    settings%use_coupling = int2Logical(InputSettings%use_coupling)
    settings%use_relaxation = int2Logical(InputSettings%use_relaxation)
-   settings%use_iterative_heat_balance = int2Logical(InputSettings%use_iterative_heat_balance)
    settings%coupling_minutes=InputSettings%coupling_minutes
    settings%couplingEffectReduction=InputSettings%couplingEffectReduction
    settings%outputStep=InputSettings%outputStep

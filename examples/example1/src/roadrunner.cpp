@@ -374,9 +374,9 @@ void run_locations_sync(const Json::Value& pJson,
   auto pointIDs=pDataHandler.GetPointIDs();
   //Variable to determine wheter input data was succesfully read
   bool success=false;
-   // Get input data for point. Returns nothing if missing value is found in the data
+   // Number of forecast locations
   int nlocations = static_cast<int>(locations.size());
-  //Json obhect to store output forecast
+  //Json object to store output forecast
   Json::Value forecast;  
 
   //Go trough all forecast locations

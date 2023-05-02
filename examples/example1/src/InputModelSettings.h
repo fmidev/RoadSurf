@@ -16,10 +16,6 @@ struct InputModelSettings
 
   double DTSecs = 30.0;                    //!< time step in seconds
   double tsurfOutputDepth = -9999.9;       //!< Depth to interpolate output surface temperature
-  int thread = 0;                          //!< ID of thread doing the calcuations
-  int statID = 0;                          //!< ID of point where the model is runned
-  int simID = 0;                           //!< ID of simulation
-  int use_iterative_heat_balance = 0;      //!< 1 if Crank–Nicholson sheme is used
   int coupling_minutes = 180;              //!< Coupling lenght in minutes
   double couplingEffectReduction=4.0*3600; //!< Parameter used to calculate radiation
                                            //!< coefficient after coupling
