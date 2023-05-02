@@ -59,7 +59,7 @@ vpath %.o obj
 vpath %.mod obj
 
 LIBFILE = libroadsurf.so
-LIBS +=	-L$(libdir) -l$(FC) -lm -lgomp
+LIBS +=	-L$(libdir) -l$(FC)  
 SRCS = $(wildcard src/*.f90)
 OBJS = $(patsubst %.f90, %.o, $(notdir $(SRCS)))
 
