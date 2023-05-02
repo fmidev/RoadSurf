@@ -1,0 +1,53 @@
+{
+
+    // Allow max 50% missing results
+    "missing_limit": 50,
+
+    // Calculation period
+    "time":
+    {
+	"analysis": 48,  // hours
+	"forecast": 26   // hours
+    },
+    "model":
+    { 
+        "use_coupling": 1, //1 if coupling is used
+        "use_relaxation": 1, // 1 if relaxation is used
+        "DTSecs": 30.0
+    },
+    "parameters":
+    {        
+     "sky_view_file":"example_skyview.txt",
+     "local_horizon_file":"example_local_horizons.txt"
+    },
+
+    // Output files
+    "output":
+    {
+	"start": 0,       // minutes from now, default is zero
+	"step":   60,        // minutes, default is 60
+	"filename": "example_output.json"
+    },
+    
+    // Data source names in the order they will be used
+
+    "input":
+    [
+	{
+	    "name": "MEPS_000",
+            "path": "example_forecast.json",
+            "type": "json",
+            "source": "forecast",
+            "params":["Temperature 2m","Humidity","WindSpeed","PrecipitationForm",
+                     "Precipitation","RadiationNetSurfaceLW","RadiationLW","RadiationGlobal",
+                     "RadiationDirectSW"]
+	},
+	{
+	    "name": "RWS_obs",
+            "path": "example_observations.json",
+            "type": "json",
+            "source": "observations",
+            "params":["Temperature 2m","Humidity","WindSpeed","Precipitation"]
+	}
+    ] // sources
+}
