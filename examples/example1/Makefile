@@ -24,7 +24,7 @@ ifeq ($(BSAN), yes)
 endif
 
 CFLAGS += $(MATHFLAGS) #-D_GLIBCXX_DEBUG
-FFLAGS += $(MATHFLAGS) -fdiagnostics-color=auto -fbounds-check
+FFLAGS += $(MATHFLAGS) -fdiagnostics-color=auto
 
 .SUFFIXES: $(SUFFIXES) .cpp .f90
 
@@ -38,12 +38,9 @@ FOBJFILES = $(patsubst %.f90, obj/%.o, $(notdir $(FSOURCES)))
 OBJFILES = $(FOBJFILES) $(COBJFILES)
 #LDFLAGS += -L../../
 
-LIBS +=	 -lcpr \
-	-lcurl \
-	-lstx-exparser \
-	-lgfortran -lm -lgomp \
-        -lpthread \
-        -ljsoncpp \
+LIBS +=	-lgfortran \
+	-lpthread \
+	-ljsoncpp \
         -lroadsurf	
 
 all: roadrunner
