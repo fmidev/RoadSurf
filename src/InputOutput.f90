@@ -41,7 +41,7 @@ Submodule (RoadSurf) ValueControl
    Implicit None
    contains 
      !> Checks input data for abnormal values
-      module Subroutine checkValues(modelInput, i, settings, surf,localParam)
+      module Subroutine CheckValues(modelInput, i, settings, surf,localParam)
          use RoadSurfVariables
       
          type(inputArrays), intent(INOUT) :: modelInput  !< Arrays for model input data
@@ -80,9 +80,9 @@ Submodule (RoadSurf) ValueControl
             settings%simulation_failed = .true.
          end if
       
-      end subroutine checkValues
+      end subroutine CheckValues
       !>set values to Tair etc
-      module Subroutine setCurrentValues(i, Tmp, modelInput, atm, settings, surf,coupling,ground)
+      module Subroutine SetCurrentValues(i, Tmp, modelInput, atm, settings, surf,coupling,ground)
          use RoadSurfVariables
       
          integer, intent(IN) :: i                     !< index of inputdata time steps
@@ -148,7 +148,7 @@ Submodule (RoadSurf) ValueControl
          end if
       End subroutine
       !>Save values to output arrays
-      module Subroutine saveOutput(modelOutput, i, surf)
+      module Subroutine SaveOutput(modelOutput, i, surf)
       
          use RoadSurfVariables
          integer, intent(IN) ::i                      !< index of inputdata time steps

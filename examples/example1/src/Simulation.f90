@@ -56,7 +56,7 @@ SUBROUTINE runsimulation(outPointers, inPointers,&
    !Start temperature profile simulation, go trough input data values
    i = 1
    Do while (i < settings%SimLen .and. (settings%Simulation_Failed .eqv. .false.))
-      Call checkValues(modelInput, i, settings, surf,localParam)
+      Call CheckValues(modelInput, i, settings, surf,localParam)
 
       !Check if coupling is on
       if (settings%use_coupling) Then
@@ -70,14 +70,14 @@ SUBROUTINE runsimulation(outPointers, inPointers,&
       end if
 
       !set current values to atm%Tair etc
-      call setCurrentValues(i, ground%Tmp, modelInput, atm, settings, surf, coupling,&
+      call SetCurrentValues(i, ground%Tmp, modelInput, atm, settings, surf, coupling,&
           ground)
 
       !If relaxation is used
       if (settings%use_relaxation) Then
          !Smooth t2m, rh and wind values when moving from initialization phase
          !to forecasting phase
-         call relaxationOperations(i, atm, settings,ground%Tmp)
+         call RelaxationOperations(i, atm, settings,ground%Tmp)
 
       end if
       !Calculate temperature profile and storage values one timestep forward
@@ -86,10 +86,10 @@ SUBROUTINE runsimulation(outPointers, inPointers,&
                             inputParam, localParam)
       
       !Save output
-      call saveOutput(modelOutput, i, surf)
+      call SaveOutput(modelOutput, i, surf)
       
       !Coupling control if at the end of the coupling period
-      call checkEndCoupling(i, settings, coupling, surf)
+      call CheckEndCoupling(i, settings, coupling, surf)
 
       i = i + 1
    end do
@@ -110,7 +110,7 @@ SUBROUTINE runsimulation(outPointers, inPointers,&
                             inputParam,localParam)
 
       !Save output
-      call saveOutput(modelOutput, i, surf)
+      call SaveOutput(modelOutput, i, surf)
 !--------SIMULATION END----------------------------
    end if
 
@@ -152,21 +152,21 @@ Subroutine roadModelOneStep(input_idxI, phy, ground, surf, atm,&
                                atm,surf)
    !Make radiation corrections based on sky view and local horizon angles
    if (localParam%sky_view<1.0 .and. localParam%sky_view>-0.01)then
-      call modRadiationBySurroundings(modelInput,inputParam,localParam,input_idxI)
+      call ModRadiationBySurroundings(modelInput,inputParam,localParam,input_idxI)
    end if
    !Calculate temperature profile one time step forward
    !Checks also for melting (can affect temperature)
-   call balanceModelOneStep(modelInput%SW(input_idxI), &
+   call BalanceModelOneStep(modelInput%SW(input_idxI), &
                             modelInput%LW(input_idxI), &
                             phy, ground, surf, atm, settings, coupling, modelInput,&
                             input_idxI,condParam)
   ! ************* WEAR FACTORS
-   call wearFactors(condParam%Snow2IceFac, settings%Tph, surf, wearF)
+   call WearFactors(condParam%Snow2IceFac, settings%Tph, surf, wearF)
    !Calculate storage terms 
-   call roadCond(phy%MaxPormms, surf, atm, settings, &
+   call RoadCond(phy%MaxPormms, surf, atm, settings, &
                  condParam,wearF)
 
    ! *************  ALBEDO
-   call calcAlbedo(ground%Albedo, surf, condParam)
+   call CalcAlbedo(ground%Albedo, surf, condParam)
  
 end Subroutine

@@ -4,7 +4,7 @@ submodule (RoadSurf) RadMod
    contains
       !> Uses sky view factor and local horizon angles to modify incoming
       !> radiation fluxes
-      module SUBROUTINE modRadiationBySurroundings(modelInput,inputParam,localParam,i)
+      module SUBROUTINE ModRadiationBySurroundings(modelInput,inputParam,localParam,i)
       use RoadSurfVariables
          type(inputArrays),intent(INOUT) ::modelInput !< model input arrays
          type(inputParameters),intent(IN) :: inputParam !< model input parameters

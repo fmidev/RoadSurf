@@ -5,7 +5,7 @@ Submodule (RoadSurf) RelaxModule
    !>Use relaxation to air temperature, wind speed and relative humidity
    !> after initialization phase. This is done to avoid jump when moving
    !> from observed atmospheric values to forecasted ones.
-   module Subroutine relaxationOperations(i, atm, settings,Tmp)
+   module Subroutine RelaxationOperations(i, atm, settings,Tmp)
       use RoadSurfVariables
    
       integer, intent(IN) :: i                     !< index of inputdata time steps

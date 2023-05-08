@@ -61,7 +61,7 @@ Module RoadSurf
       end subroutine Initialization      
 
      !> Checks input data for abnormal values
-      module Subroutine checkValues(modelInput, i, settings, surf,localParam)
+      module Subroutine CheckValues(modelInput, i, settings, surf,localParam)
          use RoadSurfVariables
       
          type(inputArrays), intent(INOUT) :: modelInput  !< Arrays for model input data
@@ -70,7 +70,7 @@ Module RoadSurf
          type(ModelSettings), intent(INOUT) :: settings !< Variables for model settings
          type(LocalParameters), intent(IN) :: localParam  !< local parameters given by
                                                           !< modelRunner.cpp
-      end subroutine checkValues
+      end subroutine CheckValues
 
      !>Handles start and end of coupling and radiation coefficient calculation after
      !> coupling
@@ -104,7 +104,7 @@ Module RoadSurf
    !> Use relaxation to air temperature, wind speed and relative humidity
    !> after initialization phase. This is done to avoid jump when moving
    !> from observed atmospheric values to forecasted ones.
-      module Subroutine relaxationOperations(i, atm, settings,Tmp)
+      module Subroutine RelaxationOperations(i, atm, settings,Tmp)
          use RoadSurfVariables
    
          integer, intent(IN) :: i                     !< index of inputdata time steps
@@ -112,10 +112,10 @@ Module RoadSurf
          type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                       !< properties
          real(8), dimension(0:16), intent(INOUT)::Tmp    !< Temperatures for each layer
-      end subroutine relaxationOperations
+      end subroutine RelaxationOperations
 
       !>set values to Tair etc
-      module Subroutine setCurrentValues(i, Tmp, modelInput, atm, settings, surf,coupling,ground)
+      module Subroutine SetCurrentValues(i, Tmp, modelInput, atm, settings, surf,coupling,ground)
          use RoadSurfVariables
       
          integer, intent(IN) :: i                     !< index of inputdata time steps
@@ -134,9 +134,9 @@ Module RoadSurf
                                                           !< properties
          real(8), dimension(0:16), intent(INOUT)::Tmp    !< Temperatures for each layer
 
-      end subroutine setCurrentValues
+      end subroutine SetCurrentValues
       !>Calculates values for next time step using heat balance model
-      module Subroutine balanceModelOneStep(SWi, LWi, phy, ground, surf, atm, &
+      module Subroutine BalanceModelOneStep(SWi, LWi, phy, ground, surf, atm, &
                                       settings, coupling, modelInput,&
                                       inputIdx,condParam)
          use RoadSurfVariables
@@ -163,9 +163,9 @@ Module RoadSurf
                                                             !< condition
       
          integer, intent(IN)::inputIdx                    !< Index in input data
-      end subroutine balanceModelOneStep
+      end subroutine BalanceModelOneStep
       !>Save values to output arrays
-      module Subroutine saveOutput(modelOutput, i, surf)
+      module Subroutine SaveOutput(modelOutput, i, surf)
       
          use RoadSurfVariables
          integer, intent(IN) ::i                      !< index of inputdata time steps
@@ -174,7 +174,7 @@ Module RoadSurf
          type(OutputArrays), intent(INOUT) :: modelOutput !< Arrays for model input data
       end subroutine
       !> check if at the end of coupling period
-      module Subroutine checkEndCoupling(i, settings, coupling, surf)
+      module Subroutine CheckEndCoupling(i, settings, coupling, surf)
          use RoadSurfVariables
          integer, intent(IN) :: i                     !<index for point in input data
       
@@ -205,24 +205,24 @@ Module RoadSurf
       end subroutine PrecipitationToStorage
       !> Uses sky view factor and local horizon angles to modify incoming
       !> radiation fluxes
-      module Subroutine modRadiationBySurroundings(modelInput,inputParam,localParam,i)
+      module Subroutine ModRadiationBySurroundings(modelInput,inputParam,localParam,i)
       use RoadSurfVariables
          type(inputArrays),intent(INOUT) ::modelInput !< model input arrays
          type(inputParameters),intent(IN) :: inputParam !< model input parameters
          type(LocalParameters), intent(IN) :: localParam  !< Local parameters
                                                           !< given by modelrunner.cpp
          integer, intent(IN) ::i            !< model input index
-      end subroutine modRadiationBySurroundings
+      end subroutine ModRadiationBySurroundings
       !> Determine wear factors (how much storage terms are reduced by traffic)
-      module Subroutine wearFactors(Snow2IceFac, Tph, surf, wearF)
+      module Subroutine WearFactors(Snow2IceFac, Tph, surf, wearF)
          use RoadSurfVariables
          real(8), intent(IN)    :: Tph                   !< time steps per hour
          type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
          type(WearingFactors), intent(OUT) :: wearF   !< wearing factors
          Real(8), intent(INOUT)    :: Snow2IceFac        !< Snow to ice transition factor
-      end subroutine wearFactors
+      end subroutine WearFactors
       !> Determines road surface condition for program Simulation      !
-      module Subroutine roadCond(MaxPormms, surf, atm, settings, &
+      module Subroutine RoadCond(MaxPormms, surf, atm, settings, &
                           CP,wearF)
          use RoadSurfVariables
       
@@ -237,9 +237,9 @@ Module RoadSurf
          type(AtmVariables), Intent(INOUT) :: atm         !< Variables for atmospheric
                                                           !< properties
          type(WearingFactors),intent(IN) :: wearF         !< wearing factors
-      end subroutine roadCond
+      end subroutine RoadCond
       !> Calculates albedo
-      module Subroutine calcAlbedo(albedo, surf, cp)
+      module Subroutine CalcAlbedo(albedo, surf, cp)
          use RoadSurfVariables
       
          type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
@@ -247,24 +247,24 @@ Module RoadSurf
                                                       !< storage terms and road condition
       
          real(8), intent(INOUT) :: Albedo                !< surface albedo
-      end subroutine calcAlbedo
+      end subroutine CalcAlbedo
  end Interface
 
    
 
    public :: ConnectFortran2Carrays
    public :: Initialization  
-   public :: checkValues
+   public :: CheckValues
    public :: CouplingOperations1
-   public :: relaxationOperations
-   public :: setCurrentValues
-   public :: balanceModelOneStep
-   public :: saveOutput
-   public :: checkEndCoupling
+   public :: RelaxationOperations
+   public :: SetCurrentValues
+   public :: BalanceModelOneStep
+   public :: SaveOutput
+   public :: CheckEndCoupling
    public :: PrecipitationToStorage
-   public :: modRadiationBySurroundings
-   public :: wearFactors
-   public :: roadCond
-   public :: calcAlbedo
+   public :: ModRadiationBySurroundings
+   public :: WearFactors
+   public :: RoadCond
+   public :: CalcAlbedo
 
 end Module RoadSurf

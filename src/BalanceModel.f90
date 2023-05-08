@@ -2,7 +2,7 @@ Submodule (RoadSurf) BalanceModel
    Implicit None
    contains
       !>Calculates values for next time step using heat balance model
-      module Subroutine balanceModelOneStep(SWi, LWi, phy, ground, surf, atm, &
+      module Subroutine BalanceModelOneStep(SWi, LWi, phy, ground, surf, atm, &
                                       settings, coupling, modelInput,&
                                       inputIdx,condParam)
          use RoadSurfVariables

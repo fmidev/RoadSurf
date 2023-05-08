@@ -4,7 +4,7 @@ submodule (RoadSurf) Cond
    implicit none
    contains
 !> Determines road surface condition for program Simulation      !
-      module Subroutine roadCond(MaxPormms, surf, atm, settings, &
+      module Subroutine RoadCond(MaxPormms, surf, atm, settings, &
                           CP,wearF)
          use RoadSurfVariables
       
@@ -63,7 +63,7 @@ submodule (RoadSurf) Cond
       
       !--------------------------------------------------------------------------------------------------
       !> Determine wear factors (how much storage terms are reduced by traffic)
-      module Subroutine wearFactors(Snow2IceFac, Tph, surf, wearF)
+      module Subroutine WearFactors(Snow2IceFac, Tph, surf, wearF)
          use RoadSurfVariables
          real(8), intent(IN)    :: Tph                   !< time steps per hour
          type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
@@ -99,7 +99,7 @@ submodule (RoadSurf) Cond
          wearF%WatWear = 10*wearF%WatWear*Tph ! - to mm/time step
       End subroutine
       !> Calculates albedo
-      module Subroutine calcAlbedo(albedo, surf, cp)
+      module Subroutine CalcAlbedo(albedo, surf, cp)
          use RoadSurfVariables
       
          type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties

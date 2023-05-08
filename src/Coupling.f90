@@ -94,7 +94,7 @@ Submodule (RoadSurf) Coupling
       
       end Subroutine
       !> check if at the end of coupling period
-      module Subroutine checkEndCoupling(i, settings, coupling, surf)
+      module Subroutine CheckEndCoupling(i, settings, coupling, surf)
          use RoadSurfVariables
          integer, intent(IN) :: i                     !<index for point in input data
       
