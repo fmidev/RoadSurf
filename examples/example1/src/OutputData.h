@@ -1,5 +1,5 @@
 #pragma once
-#include "OutputDataPointers.h"
+#include "OutputPointers.h"
 #include <iostream>
 #include <vector>
 
@@ -18,7 +18,7 @@ struct OutputData
                                    //!< equivalent mm)
   std::vector<double> Ice2Out;     //!< secondary ice storage
                                    //!< (water equivalent mm)
-  OutputDataPointers pointers() const;
+  OutputPointers pointers() const;
 };
 
 std::ostream& operator<<(std::ostream& out, const OutputData& data);

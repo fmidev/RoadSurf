@@ -1,4 +1,4 @@
-#include "InputModelSettings.h"
+#include "InputSettings.h"
 #include "JsonTools.h"
 #include <iostream>
 // ----------------------------------------------------------------------
@@ -66,7 +66,7 @@ time_t get_model_end_time(const time_t &pWallClock,
  */
 // ----------------------------------------------------------------------
 
-InputModelSettings::InputModelSettings(const Json::Value &pJson, const Options &pOptions)
+InputSettings::InputSettings(const Json::Value &pJson, const Options &pOptions)
     : forecast_time(get_forecast_time(pJson, pOptions.time))
 {
   // Establish model start and end times

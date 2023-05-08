@@ -4,7 +4,7 @@
 #include "JsonTools.h"
 #include "SkyVariables.h"
 
-struct InputModelSettings;
+struct InputSettings;
 //Class for reading sky view and local horizon angles
 class SkyView
 {

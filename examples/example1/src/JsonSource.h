@@ -2,7 +2,7 @@
 
 #include "GenericSource.h"
 #include "LocalParameters.h"
-#include "InputModelSettings.h"
+#include "InputSettings.h"
 #include <json/json.h>
 #include <memory>
 #include <string>

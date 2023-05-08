@@ -1,5 +1,5 @@
 !> pointers to output data arrays given by modelRunner.cpp
-Type, Bind(C) :: OutputDataPointers
+Type, Bind(C) :: OutputPointers
 
       INTEGER(C_INT) :: outputLen               !<output data length
 
@@ -12,4 +12,4 @@ Type, Bind(C) :: OutputDataPointers
       TYPE(C_PTR) :: c_Ice2Out;                 !< pointer to output secondary
                                                 !< ice array
 
-end type OutputDataPointers
+end type OutputPointers

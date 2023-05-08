@@ -1,5 +1,5 @@
 #pragma once
-#include "DataPointers.h"
+#include "InputPointers.h"
 #include <ctime>
 #include <iostream>
 #include <vector>
@@ -40,7 +40,7 @@ extern "C"
     std::vector<int> second;  //!< Simulated second
     // Return pointers to vectors
 
-    DataPointers pointers() const;
+    InputPointers pointers() const;
   };
 }
 

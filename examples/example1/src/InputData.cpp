@@ -25,9 +25,9 @@ InputData::InputData(int pSize)
 {
 }
 //Gives pointers to input data arrays
-DataPointers InputData::pointers() const
+InputPointers InputData::pointers() const
 {
-  return DataPointers{static_cast<int>(tair.size()),
+  return InputPointers{static_cast<int>(tair.size()),
                       tair.data(),
                       tdew.data(),
                       VZ.data(),

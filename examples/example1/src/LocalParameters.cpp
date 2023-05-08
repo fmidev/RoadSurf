@@ -1,5 +1,5 @@
 #include "LocalParameters.h"
-#include "InputModelSettings.h"
+#include "InputSettings.h"
 #include "JsonTools.h"
 
 // ----------------------------------------------------------------------
@@ -8,4 +8,4 @@
  */
 // ----------------------------------------------------------------------
 
-LocalParameters::LocalParameters(const InputModelSettings& /* pSettings */) {}
+LocalParameters::LocalParameters(const InputSettings& /* pSettings */) {}

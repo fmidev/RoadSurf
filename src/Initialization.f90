@@ -4,14 +4,14 @@ submodule (RoadSurf) Init
    Implicit none
    contains
 !> Initializes model variables and parameters
-      module Subroutine Initialization(modelInput, inputSettings, settings, &
+      module Subroutine Initialization(modelInput, inSettings, settings, &
                                 modelOutput, atm, surf, inputParam, localParam,&
                                 coupling, phy, ground,condParam)
       
          USE, INTRINSIC :: ISO_C_BINDING
          use RoadSurfVariables
       
-         type(InputModelSettings), intent(IN) :: inputSettings    !< model settings
+         type(InputSettings), intent(IN) :: inSettings    !< model settings
                                                                   !< given as input by
                                                                   !< modelRunner.cpp
       
@@ -45,7 +45,7 @@ submodule (RoadSurf) Init
                                                               !< terms and road condition
       
          !Initialize settings
-         call initSettings(inputSettings, settings,inputParam,localParam)
+         call initSettings(inSettings, settings,inputParam,localParam)
          
          !Initialize output arrays
          call initOutputArrays(settings%SimLen, modelOutput)
@@ -406,12 +406,12 @@ subroutine initTsurfObsArrays(coupling)
 end subroutine initTsurfObsArrays
 
 !> Initializes model setting values
-subroutine initSettings(InputSettings, settings,inputParam,localParam)
+subroutine initSettings(inSettings, settings,inputParam,localParam)
 
    use RoadSurfVariables
    Implicit None
 
-   type(InputModelSettings), intent(IN) :: inputSettings !< model settings given
+   type(InputSettings), intent(IN) :: inSettings !< model settings given
                                                          !< as input by modelRunner.cpp
    type(InputParameters), intent(IN) :: inputParam      !< input parameters
                                                         !< given by modelRunner.cpp
@@ -419,10 +419,10 @@ subroutine initSettings(InputSettings, settings,inputParam,localParam)
                                                          !< given by modelrunner.cpp
    type(modelSettings), intent(OUT) :: settings !< Variables for model settings
    logical :: int2Logical
-   settings%SimLen = inputSettings%SimLen
+   settings%SimLen = inSettings%SimLen
    settings%InitLenI = localParam%InitLenI
-   settings%DTSecs = inputSettings%DTSecs
-   settings%tsurfOutputDepth = inputSettings%tsurfOutputDepth
+   settings%DTSecs = inSettings%DTSecs
+   settings%tsurfOutputDepth = inSettings%tsurfOutputDepth
 
    settings%NightOn = inputParam%NightOn 
    settings%NightOff =  inputParam%NightOff
@@ -432,11 +432,11 @@ subroutine initSettings(InputSettings, settings,inputParam,localParam)
    settings%TrfFricNgt =  inputParam%TrfFricNgt
    settings%TrFfricDay =  inputParam%TrFfricDay
 
-   settings%use_coupling = int2Logical(InputSettings%use_coupling)
-   settings%use_relaxation = int2Logical(InputSettings%use_relaxation)
-   settings%coupling_minutes=InputSettings%coupling_minutes
-   settings%couplingEffectReduction=InputSettings%couplingEffectReduction
-   settings%outputStep=InputSettings%outputStep
+   settings%use_coupling = int2Logical(inSettings%use_coupling)
+   settings%use_relaxation = int2Logical(inSettings%use_relaxation)
+   settings%coupling_minutes=inSettings%coupling_minutes
+   settings%couplingEffectReduction=inSettings%couplingEffectReduction
+   settings%outputStep=inSettings%outputStep
  
 end subroutine initSettings
 

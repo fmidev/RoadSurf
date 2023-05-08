@@ -8,10 +8,10 @@ Module RoadSurfVariables
 
    Implicit None
   
-   INCLUDE 'DataPointers.f90.inc'
-   INCLUDE 'OutputDataPointers.f90.inc'
+   INCLUDE 'InputPointers.f90.inc'
+   INCLUDE 'OutputPointers.f90.inc'
    INCLUDE 'InputArrays.f90.inc'
-   INCLUDE 'InputModelSettings.f90.inc'
+   INCLUDE 'InputSettings.f90.inc'
    INCLUDE 'InputParameters.f90.inc'
    INCLUDE 'LocalParameters.f90.inc'
    INCLUDE 'OutputArrays.f90.inc'

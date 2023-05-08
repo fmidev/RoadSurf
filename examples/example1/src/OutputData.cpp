@@ -13,9 +13,9 @@ OutputData::OutputData(int pSize)
 }
 
 //Get pointers to output data arrays
-OutputDataPointers OutputData::pointers() const
+OutputPointers OutputData::pointers() const
 {
-  return OutputDataPointers{static_cast<int>(TsurfOut.size()),
+  return OutputPointers{static_cast<int>(TsurfOut.size()),
                             TsurfOut.data(),
                             SnowOut.data(),
                             WaterOut.data(),

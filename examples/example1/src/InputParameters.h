@@ -3,7 +3,7 @@
 #include <json/json.h>
 #include <cmath>
 
-struct InputModelSettings;
+struct InputSettings;
 
 //!> input parameters given by modelRunner.cpp
 
@@ -11,8 +11,8 @@ struct InputParameters
 {
   InputParameters() = delete;
 
-  InputParameters(const InputModelSettings& pSettings, const Json::Value& pJson);
-  explicit InputParameters(const InputModelSettings& pSettings);
+  InputParameters(const InputSettings& pSettings, const Json::Value& pJson);
+  explicit InputParameters(const InputSettings& pSettings);
 
   // time dependent variables
   double NightOn = 19.0;     //!< Beginning hour of night traffic (UTC)

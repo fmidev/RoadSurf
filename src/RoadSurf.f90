@@ -4,13 +4,13 @@ Module RoadSurf
    Interface
       !PUBLIC
       !> Connect C pointers to fortran arrays
-      module Subroutine ConnectFortran2Carrays(inputPointers,modelInput,&
-                 outputPointers,modelOutput)
+      module Subroutine ConnectFortran2Carrays(inPointers,modelInput,&
+                 outPointers,modelOutput)
          use RoadSurfVariables
-         type(DataPointers), intent(IN) :: inputPointers      !< pointers to input
+         type(InputPointers), intent(IN) :: inPointers      !< pointers to input
                                                               !< data arrays given by
                                                               !< modelRunner.cpp
-         type(OutputDataPointers), intent(INOUT) :: outputPointers !< pointers to
+         type(OutputPointers), intent(INOUT) :: outPointers !< pointers to
                                                               !< output data arrays
          type(InputArrays),intent(OUT) :: modelInput          !< Arrays for model input data
                                                               !< input data
@@ -19,14 +19,14 @@ Module RoadSurf
       end subroutine ConnectFortran2Carrays
 
       !> Initializes model variables and parameters
-      module Subroutine Initialization(modelInput, inputSettings, settings, &
+      module Subroutine Initialization(modelInput, inSettings, settings, &
                                 modelOutput, atm, surf, inputParam, localParam,&
                                 coupling, phy, ground,condParam)
       
          USE, INTRINSIC :: ISO_C_BINDING
          use RoadSurfVariables
       
-         type(InputModelSettings), intent(IN) :: inputSettings    !< model settings
+         type(InputSettings), intent(IN) :: inSettings    !< model settings
                                                                   !< given as input by
                                                                   !< modelRunner.cpp
       

@@ -1,5 +1,5 @@
 !> model settings given as input by modelRunner.cpp
-Type, Bind(C) :: InputModelSettings
+Type, Bind(C) :: InputSettings
       INTEGER(C_INT) :: SimLen                  !< Lenght of simulation
       INTEGER(C_INT) :: use_coupling            !< 1 if coupling is used
       INTEGER(C_INT) :: use_relaxation          !< 1 if relaxation is used
@@ -10,4 +10,4 @@ Type, Bind(C) :: InputModelSettings
                                                 !< coefficient after coupling
 
       INTEGER(C_INT) :: outputStep              !< model output frequency in minutes
-end type InputModelSettings
+end type InputSettings

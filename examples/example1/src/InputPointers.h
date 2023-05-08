@@ -4,7 +4,7 @@ extern "C"
 {
   //!> pointers to input data arrays given
 
-  struct DataPointers
+  struct InputPointers
   {
     int inputLen;        //!< input data length
 

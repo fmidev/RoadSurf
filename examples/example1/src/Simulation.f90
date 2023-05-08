@@ -1,22 +1,22 @@
 #include "Constants.h"
 
 !>Runs road weather model simulation
-SUBROUTINE runsimulation(outputPointers, inputPointers,&
-                         inputSettings, inputParam,&
+SUBROUTINE runsimulation(outPointers, inPointers,&
+                         inSettings, inputParam,&
                          localParam) BIND(C)
    USE, INTRINSIC :: ISO_C_BINDING
    use RoadSurfVariables
    use RoadSurf
    Implicit None
 
-   type(OutputDataPointers), intent(INOUT) :: outputPointers !< pointers to
+   type(OutputPointers), intent(INOUT) :: outPointers !< pointers to
                                                              !< output data arrays
 
-   type(DataPointers), intent(IN) :: inputPointers          !< pointers to input
+   type(InputPointers), intent(IN) :: inPointers          !< pointers to input
                                                             !< data arrays given
                                                             !< by modelRunner.cpp
 
-   type(InputModelSettings), intent(IN) :: inputSettings    !< model settings
+   type(InputSettings), intent(IN) :: inSettings    !< model settings
                                                             !< given as input by
                                                             !< modelRunner.cpp
 
@@ -46,10 +46,10 @@ SUBROUTINE runsimulation(outputPointers, inputPointers,&
                                                 !< storage terms and road condition
 
 !---------INITIALIZE----------------------------------------------------------
-   call ConnectFortran2Carrays(inputPointers,modelInput,&
-           outputPointers,modelOutput)
+   call ConnectFortran2Carrays(inPointers,modelInput,&
+           outPointers,modelOutput)
 
-   call Initialization(modelInput, inputSettings, settings, &
+   call Initialization(modelInput, inSettings, settings, &
                        modelOutput, atm, surf, inputParam, localParam,&
                        coupling, phy, ground, condParam) 
 !---------START SIMULATION----------------------------------

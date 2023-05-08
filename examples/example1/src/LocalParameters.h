@@ -3,7 +3,7 @@
 #include <json/json.h>
 #include <cmath>
 
-struct InputModelSettings;
+struct InputSettings;
 
 //!> input parameters given by modelRunner.cpp
 
@@ -11,7 +11,7 @@ struct LocalParameters
 {
 //  LocalParameters() = delete;
 
-  explicit LocalParameters(const InputModelSettings& pSettings);
+  explicit LocalParameters(const InputSettings& pSettings);
   LocalParameters()=default;
 
   double tair_relax = -9999.0;     //!< tair for relaxation

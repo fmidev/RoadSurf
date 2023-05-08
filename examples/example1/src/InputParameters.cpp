@@ -1,5 +1,5 @@
 #include "InputParameters.h"
-#include "InputModelSettings.h"
+#include "InputSettings.h"
 #include "JsonTools.h"
 
 // ----------------------------------------------------------------------
@@ -8,7 +8,7 @@
  */
 // ----------------------------------------------------------------------
 
-InputParameters::InputParameters(const InputModelSettings& pSettings)
+InputParameters::InputParameters(const InputSettings& pSettings)
 {
   MinPrecmm = 0.05 * pSettings.DTSecs / 3600.0;
   MinWatmms = 0.01 * pSettings.DTSecs / 3600.0;
@@ -27,7 +27,7 @@ InputParameters::InputParameters(const InputModelSettings& pSettings)
  */
 // ----------------------------------------------------------------------
 
-InputParameters::InputParameters(const InputModelSettings& pSettings, const Json::Value& pJson)
+InputParameters::InputParameters(const InputSettings& pSettings, const Json::Value& pJson)
     : InputParameters(pSettings)
 {
   // Defaults are now set

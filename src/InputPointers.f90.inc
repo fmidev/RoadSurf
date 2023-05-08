@@ -1,5 +1,5 @@
 !> pointers to input data arrays given by modelRunner.cpp
-Type, Bind(C) :: DataPointers
+Type, Bind(C) :: InputPointers
       INTEGER(C_INT) :: inputLen        !<input data length
 
       TYPE(C_PTR) :: c_tair             !< pointer to input air temperature array
@@ -22,5 +22,5 @@ Type, Bind(C) :: DataPointers
       TYPE(C_PTR) :: c_minute           !< pointer to input minute array
       TYPE(C_PTR) :: c_second           !< pointer to input second array
 
-end type DataPointers
+end type InputPointers
 

@@ -5,10 +5,10 @@
 #include <time.h>
 
 //!> model settings given as input by modelRunner.cpp
-struct InputModelSettings
+struct InputSettings
 {
-  InputModelSettings() = default;
-  explicit InputModelSettings(const Json::Value& pJson, const Options& pOptions);
+  InputSettings() = default;
+  explicit InputSettings(const Json::Value& pJson, const Options& pOptions);
 
   int SimLen = 0;          //!< Lenght of simulation
   int use_coupling = 0;    //!< 1 if coupling is used

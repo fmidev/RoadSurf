@@ -2,7 +2,7 @@
 
 //!> pointers to output data arrays given by modelRunner.cpp
 
-struct OutputDataPointers
+struct OutputPointers
 {
   int outputLen;                        //!< output data length
   const double *c_TsurfOut;             //!< pointer to output surface temperature

@@ -1,6 +1,6 @@
 #include "DataHandler.h"
 #include "InputData.h"
-#include "InputModelSettings.h"
+#include "InputSettings.h"
 #include "InputParameters.h"
 #include "JsonTools.h"
 #include "LocalParameters.h"
@@ -21,9 +21,9 @@
 // The fortran API
 extern "C"
 {
-  void runsimulation(OutputDataPointers* pOutputPointers,
-                     const DataPointers* pInputPointers,
-                     const InputModelSettings* pSettings,
+  void runsimulation(OutputPointers* pOutputPointers,
+                     const InputPointers* pInputPointers,
+                     const InputSettings* pSettings,
                      const InputParameters* pInputParams,
                      const LocalParameters* lParameters); 
 }
@@ -132,7 +132,7 @@ bool parse_options(int argc, char* argv[])
  */
 // ----------------------------------------------------------------------
 
-std::vector<time_t> get_times(const InputModelSettings& pSettings)
+std::vector<time_t> get_times(const InputSettings& pSettings)
 {
   std::vector<time_t> times;
 
@@ -154,7 +154,7 @@ std::vector<time_t> get_times(const InputModelSettings& pSettings)
  */
 // ----------------------------------------------------------------------
 
-InputData read_input(InputModelSettings& pSettings,
+InputData read_input(InputSettings& pSettings,
                                       const std::vector<time_t> pTimes,
                                       const DataHandler& pDataHandler,
                                       const InputParameters& parameters,
@@ -283,7 +283,7 @@ InputData read_input(InputModelSettings& pSettings,
  */
 // ----------------------------------------------------------------------
 void save_output(OutputData& output, InputData input, LocalParameters& lParameters, 
-                 int pointID, InputModelSettings& pSettings,std::vector<time_t> times,
+                 int pointID, InputSettings& pSettings,std::vector<time_t> times,
                  int loc_index,Json::Value& forecast)
 {
    //Output step
@@ -353,7 +353,7 @@ void write_output(std::string outputFileName, const Json::Value& forecast)
 // ----------------------------------------------------------------------
 
 void run_locations_sync(const Json::Value& pJson,
-                                  InputModelSettings& pSettings,
+                                  InputSettings& pSettings,
                                   const DataHandler& pDataHandler)
 {
   // Check that output file is given
@@ -398,11 +398,11 @@ void run_locations_sync(const Json::Value& pJson,
         // initialize output vectors with missing values
        OutputData output(pSettings.SimLen);
         // Pass the data to Fortran via pointers
-       auto outputPointers = output.pointers();
-       auto inputPointers = input.pointers();
+       auto outPointers = output.pointers();
+       auto inPointers = input.pointers();
        //Run the road weather model
        runsimulation(
-            &outputPointers, &inputPointers, &pSettings,
+            &outPointers, &inPointers, &pSettings,
             &parameters, &lParameters);
        //Save output to json object
        save_output(output, input, lParameters,pointIDs[loc_index], pSettings,times,
@@ -421,7 +421,7 @@ void run_locations_sync(const Json::Value& pJson,
 // ----------------------------------------------------------------------
 
 void run_locations_async(const Json::Value& pJson,
-                                   InputModelSettings& pSettings,
+                                   InputSettings& pSettings,
                                    const DataHandler& pDataHandler)
 {
   // Check that output file is givne
@@ -469,11 +469,11 @@ void run_locations_async(const Json::Value& pJson,
           // initialize output vectors with missing values
          OutputData output(pSettings.SimLen);
           // Pass the data to Fortran via pointers
-         auto outputPointers = output.pointers();
-         auto inputPointers = input.pointers();
+         auto outPointers = output.pointers();
+         auto inPointers = input.pointers();
 	 //Run the road weather model
          runsimulation(
-              &outputPointers, &inputPointers, &pSettings,
+              &outPointers, &inPointers, &pSettings,
               &parameters, &lParameters);
 	 //save output to json object
          save_output(output, input, lParameters,pointIDs[args.loc_index], pSettings,times,
@@ -506,7 +506,7 @@ void run_locations_async(const Json::Value& pJson,
  */
 // ----------------------------------------------------------------------
 
-void run(const Json::Value& pJson, InputModelSettings& pSettings, 
+void run(const Json::Value& pJson, InputSettings& pSettings, 
          const DataHandler& pDataHandler)
 {
   //Run simulations in parallel if number of jobs is larger than one
@@ -532,7 +532,7 @@ try  // NOLINT(cppcheck-syntaxError)
   const Json::Value nulljson;
   auto json = read_json(options.configfile);
   // Initialize settings to default values
-  InputModelSettings settings{json, options};
+  InputSettings settings{json, options};
   //Class for handling input data
   DataHandler datahandler;
 
