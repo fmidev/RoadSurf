@@ -1,5 +1,5 @@
 !> variables used in coupling (adjusting radiation to fit observed surface temperature)
-type couplingVariables
+type CouplingVariables
       real(8), dimension(0:16)::TmpSave            !< Saved layer temperatures at
                                                 !< the beginning of the coupling
                                                 !< period
@@ -80,4 +80,4 @@ type couplingVariables
                                                 !< observation time
       real(8), dimension(48)  :: obsTsurf          !< observed car surface temperature
 
-end type couplingVariables
+end type CouplingVariables

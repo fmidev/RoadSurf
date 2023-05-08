@@ -10,14 +10,14 @@ submodule (RoadSurf) Cond
       
       !------------------------------------------------------------------------------!
          real(8), intent(IN)    :: MaxPormms                 !< maximum water in asphalt pores
-         type(modelSettings), intent(IN) :: settings      !< Variables for model settings
-         type(roadCondParameters), intent(INOUT) :: CP    !< Parameters to determine
+         type(ModelSettings), intent(IN) :: settings      !< Variables for model settings
+         type(RoadCondParameters), intent(INOUT) :: CP    !< Parameters to determine
                                                           !< storage terms and road
                                                           !< condition
       
-         type(surfaceVariables), intent(INOUT) :: surf    !< Variables for surface
+         type(SurfaceVariables), intent(INOUT) :: surf    !< Variables for surface
                                                           !< properties
-         type(atmVariables), Intent(INOUT) :: atm         !< Variables for atmospheric
+         type(AtmVariables), Intent(INOUT) :: atm         !< Variables for atmospheric
                                                           !< properties
          type(wearingFactors),intent(IN) :: wearF         !< wearing factors
          real    :: SrfExtmms, SrfPormms !< water outside and insied porous media
@@ -66,7 +66,7 @@ submodule (RoadSurf) Cond
       module Subroutine wearFactors(Snow2IceFac, Tph, surf, wearF)
          use RoadSurfVariables
          real(8), intent(IN)    :: Tph                   !< time steps per hour
-         type(surfaceVariables), intent(IN) :: surf   !< Variables for surface properties
+         type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
          type(wearingFactors), intent(OUT) :: wearF   !< wearing factors
          Real(8), intent(INOUT)    :: Snow2IceFac        !< Snow to ice transition factor
       
@@ -102,8 +102,8 @@ submodule (RoadSurf) Cond
       module Subroutine calcAlbedo(albedo, surf, cp)
          use RoadSurfVariables
       
-         type(surfaceVariables), intent(IN) :: surf   !< Variables for surface properties
-         type(roadCondParameters), intent(IN) :: CP   !< Parameters to determine
+         type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
+         type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                       !< storage terms and road condition
       
          real(8), intent(INOUT) :: Albedo                !< surface albedo
@@ -147,9 +147,9 @@ Subroutine CalcPrecType(PrecPhase, DTSecs, atm, CP)
                                                 !< Sleet = 2; Rain = 1; Drizzle = 0;)
 
    real, intent(IN):: DTSecs                    !< Input time step in seconds
-   type(roadCondParameters), intent(IN) :: CP   !< Parameters to determine
+   type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
-   type(atmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
+   type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                 !< properties
    Logical :: UseInterpr                        !< use in-built phase
                                                 !< interpretation control

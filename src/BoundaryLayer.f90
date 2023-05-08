@@ -8,9 +8,9 @@ Subroutine CalcBLCondAndLE(TSurfAve, EvapmmTS, DtSecs, SrfWatmms, phy, atm)
    real(8), intent(IN) :: DtSecs                !< time steps in seconds
    real(8), intent(IN) :: SrfWatmms             !< water storage
 
-   type(physicalParameters), intent(IN) :: phy  !< Physical paremeters used in
+   type(PhysicalParameters), intent(IN) :: phy  !< Physical paremeters used in
                                                 !< the model
-   type(atmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
+   type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                 !< properties
 
    real(8), intent(INOUT) :: EvapmmTS           !< Evaporation

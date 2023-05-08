@@ -10,25 +10,25 @@ Submodule (RoadSurf) Coupling
                                      CP,localParam)
          use RoadSurfVariables
       
-         type(modelSettings), intent(IN) :: settings          !< Variables for model
+         type(ModelSettings), intent(IN) :: settings          !< Variables for model
                                                               !< settings
          type(inputArrays), intent(INOUT) :: modelInput       !< Arrays for model
                                                               !< input data
-         type(roadCondParameters), intent(IN) :: CP           !< Parameters to
+         type(RoadCondParameters), intent(IN) :: CP           !< Parameters to
                                                               !< determine storage
                                                               !< terms and road condition
       
          integer, intent(INOUT) :: i                          !< index for point in
                                                               !< input data
-         type(couplingVariables), intent(INOUT) :: coupling   !< variables used in
+         type(CouplingVariables), intent(INOUT) :: coupling   !< variables used in
                                                               !< coupling(adjusting
                                                               !< radiation to fit
                                                               !< observed surface
                                                               !< temperature)
       
-         type(surfaceVariables), intent(INOUT) :: surf        !< Variables for surface
+         type(SurfaceVariables), intent(INOUT) :: surf        !< Variables for surface
                                                               !< properties
-         type(groundVariables), intent(INOUT) :: ground       !< Varibales for ground
+         type(GroundVariables), intent(INOUT) :: ground       !< Varibales for ground
                                                               !< properties
          type(localParameters),intent(IN) :: localParam       !< local parameters
          real(8) :: DTs                                          !< input time step in seconds
@@ -98,9 +98,9 @@ Submodule (RoadSurf) Coupling
          use RoadSurfVariables
          integer, intent(IN) :: i                     !<index for point in input data
       
-         type(modelSettings), intent(IN) :: settings  !< Variables for model settings
-         type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
-         type(couplingVariables), intent(INOUT) :: coupling !< variables used in
+         type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
+         type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+         type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
                                                             !< coupling(adjusting
                                                             !< radiation to fit
                                                             !< observed surface temperature)
@@ -124,7 +124,7 @@ Subroutine CouplingOperations2(TSurfAve, coupling)
 
    real(8), intent(INOUT) :: TsurfAve              !< average temperature of the
                                                 !< first two layers
-   type(couplingVariables), intent(INOUT) :: coupling !< variables used in
+   type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
                                                       !< coupling(adjusting
                                                       !< radiation to fit
                                                       !< observed surface temperature)
@@ -144,7 +144,7 @@ Subroutine initCoupling(coupling)
    use RoadSurfVariables
    Implicit None
 
-   type(couplingVariables), intent(INOUT) :: coupling !< variables used in
+   type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
                                                       !< coupling(adjusting
                                                       !< radiation to fit
                                                       !< observed surface temperature)
@@ -176,9 +176,9 @@ Subroutine saveDataForCoupling(datai, Albedo, Tmp, coupling, surf,&
    integer, intent(IN):: datai                  !<index for point in input data
    real(8), intent(IN) :: Albedo                !< Surface albedo
    real(8), dimension(0:16), intent(IN)::Tmp    !< Temperatures for each layer
-   type(surfaceVariables), intent(IN) :: surf   !< Variables for surface properties
+   type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
    type(inputArrays), intent(IN) :: modelInput  !< Arrays for model
-   type(couplingVariables), intent(INOUT) :: coupling !< variables used in
+   type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
                                                       !< coupling(adjusting
                                                       !< radiation to fit
                                                       !< observed surface temperature)
@@ -218,13 +218,13 @@ Subroutine uploadDataForCoupling(datai, Albedo, Tmp, coupling, surf,&
    real(8), intent(INOUT) :: Albedo                        !<Surface albedo
    real(8), dimension(0:16), intent(INOUT)::Tmp            !< Temperatures for each
                                                         !< layer
-   type(couplingVariables), intent(INOUT) :: coupling   !< variables used in
+   type(CouplingVariables), intent(INOUT) :: coupling   !< variables used in
                                                         !< coupling(adjusting
                                                         !< radiation to fit
                                                         !< observed surface
                                                         !< temperature)
 
-   type(surfaceVariables), intent(INOUT) :: surf        !< Variables for surface
+   type(SurfaceVariables), intent(INOUT) :: surf        !< Variables for surface
                                                         !< properties
    type(inputArrays), intent(INOUT) :: modelInput          !< Arrays for model
 
@@ -259,9 +259,9 @@ Subroutine snowIceCheck(LastTsurfObs, surf, CP)
    implicit none
    real(8), intent(IN) :: LastTsurfObs             !< latest surface temperature
                                                 !< observation
-   type(roadCondParameters), intent(IN) :: CP   !< Parameters to determine
+   type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
-   type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+   type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
 
    if (LastTsurfObs > CP%TLimMeltSnow .and. surf%SrfSnowmms > 0.00) Then
       !Force snow melting
@@ -292,7 +292,7 @@ Subroutine Coupling_control(TSurfAve, coupling)
    Implicit None
    real(8), intent(INOUT) ::    TsurfAve           !< average temperature of the
                                                 !< first two layers
-   type(couplingVariables), intent(INOUT) :: coupling !< variables used in
+   type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
                                                       !< coupling(adjusting
                                                       !< radiation to fit
                                                       !< observed surface temperature)
@@ -485,12 +485,12 @@ Subroutine initCouplingTimes(coupling, settings)
    use RoadSurfVariables
    Implicit None
 
-   type(couplingVariables), intent(INOUT) :: coupling !< variables used in
+   type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
                                                       !< coupling(adjusting
                                                       !< radiation to fit
                                                       !< observed surface temperature)
 
-   type(modelSettings), intent(INOUT) :: settings !< Variables for model settings
+   type(ModelSettings), intent(INOUT) :: settings !< Variables for model settings
    real(8) :: DTs                                  !< model time step in seconds
 
    integer:: i
@@ -544,8 +544,8 @@ subroutine couplingCofWithInputRadCof(inputRC, coupling, i, settings)
                                                           !< coefficient is
                                                           !< given as input
 
-   type(modelSettings), intent(IN) :: settings  !< Variables for model settings
-   type(couplingVariables), intent(INOUT) :: coupling !< variables used in
+   type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
+   type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
                                                       !< coupling(adjusting
                                                       !< radiation to fit
                                                       !< observed surface temperature)

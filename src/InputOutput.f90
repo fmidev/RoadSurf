@@ -8,10 +8,10 @@ Subroutine setInputParam(localParam, atm, coupling, settings)
 
    type(LocalParameters), intent(IN) :: localParam  !< local parameters given by
                                                     !< modelRunner.cpp
-   type(modelSettings), intent(INOUT) :: settings   !< Variables for model settings
-   type(atmVariables), intent(INOUT) :: atm         !< Variables for atmospheric
+   type(ModelSettings), intent(INOUT) :: settings   !< Variables for model settings
+   type(AtmVariables), intent(INOUT) :: atm         !< Variables for atmospheric
                                                     !< properties
-   type(couplingVariables), intent(OUT) :: coupling !< variables used in coupling
+   type(CouplingVariables), intent(OUT) :: coupling !< variables used in coupling
 
    coupling%NObs = -99
 
@@ -46,8 +46,8 @@ Submodule (RoadSurf) ValueControl
       
          type(inputArrays), intent(INOUT) :: modelInput  !< Arrays for model input data
          integer, intent(IN) ::i                      !< index of inputdata time steps
-         type(surfaceVariables), intent(IN) :: surf   !< Variables for surface properties
-         type(modelSettings), intent(INOUT) :: settings !< Variables for model settings
+         type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
+         type(ModelSettings), intent(INOUT) :: settings !< Variables for model settings
          type(LocalParameters), intent(IN) :: localParam  !< local parameters given by
                                                           !< modelRunner.cpp
       
@@ -87,17 +87,17 @@ Submodule (RoadSurf) ValueControl
       
          integer, intent(IN) :: i                     !< index of inputdata time steps
       
-         type(modelSettings), intent(IN) :: settings  !< Variables for model settings
+         type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
          type(inputArrays), intent(IN) :: modelInput  !< Arrays for model input data
-         type(couplingVariables), intent(IN) :: coupling !< variables used in
+         type(CouplingVariables), intent(IN) :: coupling !< variables used in
                                                          !< coupling(adjusting
                                                          !< radiation to fit observed
                                                          !< surface temperature)
       
-         type(atmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
+         type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                       !< properties
-         type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
-         type(groundVariables), intent(INOUT) :: ground   !< Varibales for ground
+         type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+         type(GroundVariables), intent(INOUT) :: ground   !< Varibales for ground
                                                           !< properties
          real(8), dimension(0:16), intent(INOUT)::Tmp    !< Temperatures for each layer
       
@@ -152,9 +152,9 @@ Submodule (RoadSurf) ValueControl
       
          use RoadSurfVariables
          integer, intent(IN) ::i                      !< index of inputdata time steps
-         type(surfaceVariables), intent(IN) :: surf   !< Variables for surface properties
+         type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
                                                       !< properties
-         type(outputArrays), intent(INOUT) :: modelOutput !< Arrays for model input data
+         type(OutputArrays), intent(INOUT) :: modelOutput !< Arrays for model input data
       
          modelOutput%SnowOut(i) = surf%SrfSnowmms
          modelOutput%WaterOut(i) = surf%SrfWatmms
@@ -170,12 +170,12 @@ Subroutine lastValues(modelInput, atm, settings, ground, surf)
    use RoadSurfVariables
    Implicit None
 
-   type(modelSettings), intent(IN) :: settings  !< Variables for model settings
+   type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
    type(inputArrays), intent(IN) :: modelInput  !< Arrays for model input data
-   type(atmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
+   type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                 !< properties
-   type(groundVariables), intent(INOUT) :: ground !< Varibales for ground properties
-   type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+   type(GroundVariables), intent(INOUT) :: ground !< Varibales for ground properties
+   type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
    real(8) :: depth
    real(8) :: t_output
 

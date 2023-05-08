@@ -12,18 +12,18 @@ Submodule (RoadSurf) BalanceModel
          real(8), intent(IN) :: LWi                       !< Downwelling long wave
                                                           !< radiation
       
-         type(physicalParameters), intent(INOUT) :: phy   !< Physical paremeters used
+         type(PhysicalParameters), intent(INOUT) :: phy   !< Physical paremeters used
                                                           !< in the model
-         type(couplingVariables), intent(IN) :: coupling  !< variables used in coupling
+         type(CouplingVariables), intent(IN) :: coupling  !< variables used in coupling
          type(inputArrays), intent(IN) :: modelInput      !< Arrays for model input data
-         type(groundVariables), intent(INOUT) :: ground   !< Varibales for ground
+         type(GroundVariables), intent(INOUT) :: ground   !< Varibales for ground
                                                           !< properties
-         type(surfaceVariables), intent(INOUT) :: surf    !< Variables for surface
+         type(SurfaceVariables), intent(INOUT) :: surf    !< Variables for surface
                                                           !< properties
-         type(atmVariables), intent(INOUT) :: atm         !< Variables for atmospheric
+         type(AtmVariables), intent(INOUT) :: atm         !< Variables for atmospheric
                                                           !< properties
-         type(modelSettings), intent(INOUT) :: settings   !< Variables for model settings
-         type(roadCondParameters), intent(IN) :: condParam  !< Parameters to
+         type(ModelSettings), intent(INOUT) :: settings   !< Variables for model settings
+         type(RoadCondParameters), intent(IN) :: condParam  !< Parameters to
                                                             !< determine storage
                                                             !< terms and road
                                                             !< condition
@@ -90,9 +90,9 @@ Subroutine calcProfile(Nlayers, DTSecs, TrfFric, ground, atm)
    real(8), intent(IN) :: DTSecs                !< time step in seconds
    real(8), intent(IN) :: TrfFric               !< Surface heating caused by traffic
 
-   type(atmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
+   type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                 !< properties
-   type(groundVariables), intent(INOUT) :: ground !< Varibales for ground properties
+   type(GroundVariables), intent(INOUT) :: ground !< Varibales for ground properties
    integer :: j
    Real(8) :: Gflux(0:16)                       !< Heat flux
    Integer :: NLayerTemp                        !< Number of layers to caclulate
@@ -129,7 +129,7 @@ Subroutine calcCapDZCondDZ(NLayers, ground)
    use RoadSurfVariables
    implicit none
    Integer, intent(IN) :: NLayers               !< number of ground layers
-   type(groundVariables), intent(INOUT) :: ground !< Varibales for ground properties
+   type(GroundVariables), intent(INOUT) :: ground !< Varibales for ground properties
 
    Integer :: NLayerTemp                        !< Number of layers to caclulate
                                                 !< temperature
@@ -154,7 +154,7 @@ End Subroutine
 Subroutine HCapValues(phy)
    use RoadSurfVariables
    Implicit None
-   type(physicalParameters), intent(INOUT) :: phy !< Physical paremeters used in
+   type(PhysicalParameters), intent(INOUT) :: phy !< Physical paremeters used in
                                                   !< the model 
    !Campbell, Gaylon S., Soil Physics wit Basic. Elsevier, 
    !the Netherlands, 1985, p.32
@@ -187,10 +187,10 @@ Subroutine CalcHCapHCond(NLayers, DTSecs, phy, ground, atm)
    implicit none
    integer, intent(IN) ::NLayers                !< number of ground layers
    real(8), intent(IN)::DTsecs                  !< time step in seconds
-   type(physicalParameters), intent(IN) :: phy  !< Physical paremeters used in
+   type(PhysicalParameters), intent(IN) :: phy  !< Physical paremeters used in
                                                 !< the model
-   type(groundVariables), intent(INOUT) :: ground !< Varibales for ground properties
-   type(atmVariables), intent(IN) :: atm        !< Variables for atmospheric
+   type(GroundVariables), intent(INOUT) :: ground !< Varibales for ground properties
+   type(AtmVariables), intent(IN) :: atm        !< Variables for atmospheric
                                                 !< properties
    integer :: i      !< loop integer
    real(8) :: RooWT  !< water density (kg/m3)
@@ -251,9 +251,9 @@ Subroutine CalcCC(NLayers, phy, ground)
    use RoadSurfVariables
    implicit none
    integer, intent(IN) ::NLayers                !< number of ground layers
-   type(physicalParameters), intent(IN) :: phy  !< Physical paremeters used in
+   type(PhysicalParameters), intent(IN) :: phy  !< Physical paremeters used in
                                                 !< the model
-   type(groundVariables), intent(INOUT) :: ground !< Varibales for ground properties
+   type(GroundVariables), intent(INOUT) :: ground !< Varibales for ground properties
    integer :: i
 
    ! ************* HEAT CAPACITY BY LAYERS
@@ -308,7 +308,7 @@ Subroutine calcHStor(ground)
    use RoadSurfVariables
    Implicit none
 
-   type(groundVariables), intent(INOUT) :: ground
+   type(GroundVariables), intent(INOUT) :: ground
    real(8) ::T1Ave, TN1Ave
 
    T1Ave = (ground%Tmp(1) + 3.*ground%Tmp(2))/4.
@@ -353,9 +353,9 @@ Subroutine SetDayDependendVariables(settings, surf, modelInput, atm, inputIdx)
 
    integer, intent(IN) :: inputIdx              !< Input data index
    type(inputArrays), intent(IN) :: modelInput  !< Model input arrays
-   type(modelSettings), intent(IN) :: settings  !< Variables for model settings
-   type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
-   type(atmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
+   type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
+   type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+   type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                 !< properties
 
    integer :: shour

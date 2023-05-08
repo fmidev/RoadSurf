@@ -14,11 +14,11 @@ Submodule (RoadSurf) ConnectArrays
                                                               !< output data arrays
          type(InputArrays),intent(OUT) :: modelInput          !< Arrays for model input data
                                                               !< input data
-         type(outputArrays), intent(OUT) :: modelOutput       !< Arrays for model output data
+         type(OutputArrays), intent(OUT) :: modelOutput       !< Arrays for model output data
                                                               !< output data arrays
          !Set data from C++ to fortran arrays
          call SetData2InputArrays(inPointers, modelInput)
-         !Connect pointers to outputArrays given by C++ side
+         !Connect pointers to OutputArrays given by C++ side
          call ConnectOutputArrays2Pointers(outPointers, modelOutput) 
       
       end subroutine ConnectFortran2Carrays
@@ -66,7 +66,7 @@ Subroutine ConnectOutputArrays2Pointers(outPointers, modelOutput)
    implicit none
    type(OutputPointers), intent(INOUT) :: outPointers !< pointers to
                                                              !< output data arrays
-   type(outputArrays), intent(OUT) :: modelOutput !< Arrays for model output data
+   type(OutputArrays), intent(OUT) :: modelOutput !< Arrays for model output data
 
    CALL C_F_POINTER(outPointers%c_TsurfOut, modelOutput%TsurfOut, &
                     (/outPointers%outputLen/))

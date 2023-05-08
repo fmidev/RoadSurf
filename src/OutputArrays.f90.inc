@@ -1,5 +1,5 @@
 !> Arrays for model output data
-type outputArrays
+type OutputArrays
       REAL(C_DOUBLE), POINTER :: TsurfOut(:)            !< Road surface temperature (C)
       REAL(C_DOUBLE), POINTER :: SnowOut(:)             !< snow storage (water
                                                         !< equivalent mm)
@@ -11,4 +11,4 @@ type outputArrays
       REAL(C_DOUBLE), POINTER :: Ice2Out(:)             !< secondary ice storage
 
 
-end type outputArrays
+end type OutputArrays

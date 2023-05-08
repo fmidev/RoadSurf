@@ -9,8 +9,8 @@ Submodule (RoadSurf) RelaxModule
       use RoadSurfVariables
    
       integer, intent(IN) :: i                     !< index of inputdata time steps
-      type(modelSettings), intent(IN) :: settings  !< Variables for model settings
-      type(atmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
+      type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
+      type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                    !< properties
       real(8), dimension(0:16), intent(INOUT)::Tmp    !< Temperatures for each layer
       real(8) :: DTs

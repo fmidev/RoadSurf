@@ -1,5 +1,5 @@
 !> Variables for ground properties
-type groundVariables
+type GroundVariables
       real(8) :: Albedo                        !< surface albedo
       real(8) :: HStor                         !< Descriptes stored heat to the
                                             !< surface from previous time step
@@ -24,4 +24,4 @@ type groundVariables
                                             !< layer height
       real(8) :: GroundFlux                    !< ground heat flux (between 2nd and
                                             !< 3rd layers)
-end type groundVariables
+end type GroundVariables

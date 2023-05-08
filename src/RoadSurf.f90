@@ -14,7 +14,7 @@ Module RoadSurf
                                                               !< output data arrays
          type(InputArrays),intent(OUT) :: modelInput          !< Arrays for model input data
                                                               !< input data
-         type(outputArrays), intent(OUT) :: modelOutput       !< Arrays for model output data
+         type(OutputArrays), intent(OUT) :: modelOutput       !< Arrays for model output data
                                                               !< output data arrays
       end subroutine ConnectFortran2Carrays
 
@@ -37,26 +37,26 @@ Module RoadSurf
       
          type(inputArrays), intent(OUT) :: modelInput         !< Arrays for model
                                                               !< input data
-         type(outputArrays), intent(OUT) :: modelOutput       !< Arrays for model
+         type(OutputArrays), intent(OUT) :: modelOutput       !< Arrays for model
                                                               !< output data
-         type(atmVariables), intent(OUT) :: atm               !< Variables for
+         type(AtmVariables), intent(OUT) :: atm               !< Variables for
                                                               !< atmospheric properties
-         type(couplingVariables), intent(OUT) :: coupling     !< variables used in
+         type(CouplingVariables), intent(OUT) :: coupling     !< variables used in
                                                               !< coupling(adjusting
                                                               !< radiation to fit
                                                               !< observed surface
                                                               !< temperature)
       
-         type(modelSettings), intent(OUT) :: settings         !< Variables for model
+         type(ModelSettings), intent(OUT) :: settings         !< Variables for model
                                                               !< settings
       
-         type(physicalParameters), intent(OUT) :: phy         !< Physical paremeters
+         type(PhysicalParameters), intent(OUT) :: phy         !< Physical paremeters
                                                               !< used in the model
-         type(groundVariables), intent(OUT) :: ground         !< Varibales for ground
+         type(GroundVariables), intent(OUT) :: ground         !< Varibales for ground
                                                               !< properties
-         type(surfaceVariables), intent(OUT) :: surf          !< Variables for surface
+         type(SurfaceVariables), intent(OUT) :: surf          !< Variables for surface
                                                               !< properties
-         type(roadCondParameters), intent(OUT) :: condParam   !< Parameters to determine storage
+         type(RoadCondParameters), intent(OUT) :: condParam   !< Parameters to determine storage
                                                               !< terms and road condition
       end subroutine Initialization      
 
@@ -66,8 +66,8 @@ Module RoadSurf
       
          type(inputArrays), intent(INOUT) :: modelInput  !< Arrays for model input data
          integer, intent(IN) ::i                      !< index of inputdata time steps
-         type(surfaceVariables), intent(IN) :: surf   !< Variables for surface properties
-         type(modelSettings), intent(INOUT) :: settings !< Variables for model settings
+         type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
+         type(ModelSettings), intent(INOUT) :: settings !< Variables for model settings
          type(LocalParameters), intent(IN) :: localParam  !< local parameters given by
                                                           !< modelRunner.cpp
       end subroutine checkValues
@@ -78,25 +78,25 @@ Module RoadSurf
                                      CP,localParam)
          use RoadSurfVariables
       
-         type(modelSettings), intent(IN) :: settings          !< Variables for model
+         type(ModelSettings), intent(IN) :: settings          !< Variables for model
                                                               !< settings
          type(inputArrays), intent(INOUT) :: modelInput       !< Arrays for model
                                                               !< input data
-         type(roadCondParameters), intent(IN) :: CP           !< Parameters to
+         type(RoadCondParameters), intent(IN) :: CP           !< Parameters to
                                                               !< determine storage
                                                               !< terms and road condition
       
          integer, intent(INOUT) :: i                          !< index for point in
                                                               !< input data
-         type(couplingVariables), intent(INOUT) :: coupling   !< variables used in
+         type(CouplingVariables), intent(INOUT) :: coupling   !< variables used in
                                                               !< coupling(adjusting
                                                               !< radiation to fit
                                                               !< observed surface
                                                               !< temperature)
       
-         type(surfaceVariables), intent(INOUT) :: surf        !< Variables for surface
+         type(SurfaceVariables), intent(INOUT) :: surf        !< Variables for surface
                                                               !< properties
-         type(groundVariables), intent(INOUT) :: ground       !< Varibales for ground
+         type(GroundVariables), intent(INOUT) :: ground       !< Varibales for ground
                                                               !< properties
          type(localParameters),intent(IN) :: localParam       !< local parameters
       end subroutine CouplingOperations1
@@ -108,8 +108,8 @@ Module RoadSurf
          use RoadSurfVariables
    
          integer, intent(IN) :: i                     !< index of inputdata time steps
-         type(modelSettings), intent(IN) :: settings  !< Variables for model settings
-         type(atmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
+         type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
+         type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                       !< properties
          real(8), dimension(0:16), intent(INOUT)::Tmp    !< Temperatures for each layer
       end subroutine relaxationOperations
@@ -120,17 +120,17 @@ Module RoadSurf
       
          integer, intent(IN) :: i                     !< index of inputdata time steps
       
-         type(modelSettings), intent(IN) :: settings  !< Variables for model settings
+         type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
          type(inputArrays), intent(IN) :: modelInput  !< Arrays for model input data
-         type(couplingVariables), intent(IN) :: coupling !< variables used in
+         type(CouplingVariables), intent(IN) :: coupling !< variables used in
                                                          !< coupling(adjusting
                                                          !< radiation to fit observed
                                                          !< surface temperature)
       
-         type(atmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
+         type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                       !< properties
-         type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
-         type(groundVariables), intent(INOUT) :: ground   !< Varibales for ground
+         type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+         type(GroundVariables), intent(INOUT) :: ground   !< Varibales for ground
                                                           !< properties
          real(8), dimension(0:16), intent(INOUT)::Tmp    !< Temperatures for each layer
 
@@ -146,18 +146,18 @@ Module RoadSurf
          real(8), intent(IN) :: LWi                       !< Downwelling long wave
                                                           !< radiation
       
-         type(physicalParameters), intent(INOUT) :: phy   !< Physical paremeters used
+         type(PhysicalParameters), intent(INOUT) :: phy   !< Physical paremeters used
                                                           !< in the model
-         type(couplingVariables), intent(IN) :: coupling  !< variables used in coupling
+         type(CouplingVariables), intent(IN) :: coupling  !< variables used in coupling
          type(inputArrays), intent(IN) :: modelInput      !< Arrays for model input data
-         type(groundVariables), intent(INOUT) :: ground   !< Varibales for ground
+         type(GroundVariables), intent(INOUT) :: ground   !< Varibales for ground
                                                           !< properties
-         type(surfaceVariables), intent(INOUT) :: surf    !< Variables for surface
+         type(SurfaceVariables), intent(INOUT) :: surf    !< Variables for surface
                                                           !< properties
-         type(atmVariables), intent(INOUT) :: atm         !< Variables for atmospheric
+         type(AtmVariables), intent(INOUT) :: atm         !< Variables for atmospheric
                                                           !< properties
-         type(modelSettings), intent(INOUT) :: settings   !< Variables for model settings
-         type(roadCondParameters), intent(IN) :: condParam  !< Parameters to
+         type(ModelSettings), intent(INOUT) :: settings   !< Variables for model settings
+         type(RoadCondParameters), intent(IN) :: condParam  !< Parameters to
                                                             !< determine storage
                                                             !< terms and road
                                                             !< condition
@@ -169,18 +169,18 @@ Module RoadSurf
       
          use RoadSurfVariables
          integer, intent(IN) ::i                      !< index of inputdata time steps
-         type(surfaceVariables), intent(IN) :: surf   !< Variables for surface properties
+         type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
                                                       !< properties
-         type(outputArrays), intent(INOUT) :: modelOutput !< Arrays for model input data
+         type(OutputArrays), intent(INOUT) :: modelOutput !< Arrays for model input data
       end subroutine
       !> check if at the end of coupling period
       module Subroutine checkEndCoupling(i, settings, coupling, surf)
          use RoadSurfVariables
          integer, intent(IN) :: i                     !<index for point in input data
       
-         type(modelSettings), intent(IN) :: settings  !< Variables for model settings
-         type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
-         type(couplingVariables), intent(INOUT) :: coupling !< variables used in
+         type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
+         type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+         type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
                                                             !< coupling(adjusting
                                                             !< radiation to fit
                                                             !< observed surface temperature)
@@ -190,8 +190,8 @@ Module RoadSurf
       module Subroutine PrecipitationToStorage(settings,CP,PrecPhase,atm,surf)
          use RoadSurfVariables
          
-         type(modelSettings),intent(IN)::settings      !> Variables for model settings
-         type(roadCondParameters),intent(IN)::CP       !< Parameters to determine
+         type(ModelSettings),intent(IN)::settings      !> Variables for model settings
+         type(RoadCondParameters),intent(IN)::CP       !< Parameters to determine
                                                        !< storage terms and road 
                                                        !< condition
          integer, intent(IN) :: PrecPhase              !< precPhase (Hail = 6;
@@ -200,8 +200,8 @@ Module RoadSurf
                                                        !< Snow = 3; Sleet = 2;
                                                        !< Rain = 1; Drizzle = 0;)
       
-         type(atmVariables),Intent(INOUT)::atm         !< Variables for atmpheric properties
-         type(surfaceVariables), Intent(INOUT) :: surf !< Variables for surface properties
+         type(AtmVariables),Intent(INOUT)::atm         !< Variables for atmpheric properties
+         type(SurfaceVariables), Intent(INOUT) :: surf !< Variables for surface properties
       end subroutine PrecipitationToStorage
       !> Uses sky view factor and local horizon angles to modify incoming
       !> radiation fluxes
@@ -217,7 +217,7 @@ Module RoadSurf
       module Subroutine wearFactors(Snow2IceFac, Tph, surf, wearF)
          use RoadSurfVariables
          real(8), intent(IN)    :: Tph                   !< time steps per hour
-         type(surfaceVariables), intent(IN) :: surf   !< Variables for surface properties
+         type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
          type(wearingFactors), intent(OUT) :: wearF   !< wearing factors
          Real(8), intent(INOUT)    :: Snow2IceFac        !< Snow to ice transition factor
       end subroutine wearFactors
@@ -227,14 +227,14 @@ Module RoadSurf
          use RoadSurfVariables
       
          real(8), intent(IN)    :: MaxPormms                 !< maximum water in asphalt pores
-         type(modelSettings), intent(IN) :: settings      !< Variables for model settings
-         type(roadCondParameters), intent(INOUT) :: CP    !< Parameters to determine
+         type(ModelSettings), intent(IN) :: settings      !< Variables for model settings
+         type(RoadCondParameters), intent(INOUT) :: CP    !< Parameters to determine
                                                           !< storage terms and road
                                                           !< condition
       
-         type(surfaceVariables), intent(INOUT) :: surf    !< Variables for surface
+         type(SurfaceVariables), intent(INOUT) :: surf    !< Variables for surface
                                                           !< properties
-         type(atmVariables), Intent(INOUT) :: atm         !< Variables for atmospheric
+         type(AtmVariables), Intent(INOUT) :: atm         !< Variables for atmospheric
                                                           !< properties
          type(wearingFactors),intent(IN) :: wearF         !< wearing factors
       end subroutine roadCond
@@ -242,8 +242,8 @@ Module RoadSurf
       module Subroutine calcAlbedo(albedo, surf, cp)
          use RoadSurfVariables
       
-         type(surfaceVariables), intent(IN) :: surf   !< Variables for surface properties
-         type(roadCondParameters), intent(IN) :: CP   !< Parameters to determine
+         type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
+         type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                       !< storage terms and road condition
       
          real(8), intent(INOUT) :: Albedo                !< surface albedo

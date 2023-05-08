@@ -1,5 +1,5 @@
 !> Physical parameters used in the model
-type physicalParameters
+type PhysicalParameters
       real(8) :: VK_Const  !< Von Karman's konstant
       real(8) :: SB_const  !< Stefan-boltzman constant (W/m2K4)
       real(8) :: ZRefW     !< Wind reference height (m)
@@ -41,4 +41,4 @@ type physicalParameters
       real(8) :: Silt2     !< Clay fraction for deep ground layers
       real(8) :: RhoB1     !< Bulk density for surface layers
       real(8) :: RhoB2     !< Bulk density for deep ground layers
-end type physicalParameters
+end type PhysicalParameters

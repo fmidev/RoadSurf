@@ -22,26 +22,26 @@ submodule (RoadSurf) Init
       
          type(inputArrays), intent(OUT) :: modelInput         !< Arrays for model
                                                               !< input data
-         type(outputArrays), intent(OUT) :: modelOutput       !< Arrays for model
+         type(OutputArrays), intent(OUT) :: modelOutput       !< Arrays for model
                                                               !< output data
-         type(atmVariables), intent(OUT) :: atm               !< Variables for
+         type(AtmVariables), intent(OUT) :: atm               !< Variables for
                                                               !< atmospheric properties
-         type(couplingVariables), intent(OUT) :: coupling     !< variables used in
+         type(CouplingVariables), intent(OUT) :: coupling     !< variables used in
                                                               !< coupling(adjusting
                                                               !< radiation to fit
                                                               !< observed surface
                                                               !< temperature)
       
-         type(modelSettings), intent(OUT) :: settings         !< Variables for model
+         type(ModelSettings), intent(OUT) :: settings         !< Variables for model
                                                               !< settings
       
-         type(physicalParameters), intent(OUT) :: phy         !< Physical paremeters
+         type(PhysicalParameters), intent(OUT) :: phy         !< Physical paremeters
                                                               !< used in the model
-         type(groundVariables), intent(OUT) :: ground         !< Varibales for ground
+         type(GroundVariables), intent(OUT) :: ground         !< Varibales for ground
                                                               !< properties
-         type(surfaceVariables), intent(OUT) :: surf          !< Variables for surface
+         type(SurfaceVariables), intent(OUT) :: surf          !< Variables for surface
                                                               !< properties
-         type(roadCondParameters), intent(OUT) :: condParam   !< Parameters to determine storage
+         type(RoadCondParameters), intent(OUT) :: condParam   !< Parameters to determine storage
                                                               !< terms and road condition
       
          !Initialize settings
@@ -69,18 +69,18 @@ Subroutine initVariablesAndParameters(modelInput, &
    type(InputParameters), intent(IN) :: inputParam      !< input parameters
                                                         !< given by modelRunner.cpp
    type(inputArrays), intent(INOUT) :: modelInput       !< Arrays for model input data
-   type(atmVariables), intent(INOUT) :: atm             !< Variables for atmospheric properties
-   type(couplingVariables), intent(INOUT) :: coupling   !< variables used in coupling(adjusting
+   type(AtmVariables), intent(INOUT) :: atm             !< Variables for atmospheric properties
+   type(CouplingVariables), intent(INOUT) :: coupling   !< variables used in coupling(adjusting
                                                         !< radiation to fit observed surface
                                                         !< temperature)
 
-   type(modelSettings), intent(INOUT) :: settings       !< Variables for model settings
+   type(ModelSettings), intent(INOUT) :: settings       !< Variables for model settings
 
-   type(physicalParameters), intent(OUT) :: phy         !< Physical paremeters
+   type(PhysicalParameters), intent(OUT) :: phy         !< Physical paremeters
                                                         !< used in the model
-   type(groundVariables), intent(OUT) :: ground         !< Varibales for ground properties
-   type(surfaceVariables), intent(INOUT) :: surf        !< Variables for surface properties
-   type(roadCondParameters), intent(OUT) :: condParam   !< Parameters to determine storage
+   type(GroundVariables), intent(OUT) :: ground         !< Varibales for ground properties
+   type(SurfaceVariables), intent(INOUT) :: surf        !< Variables for surface properties
+   type(RoadCondParameters), intent(OUT) :: condParam   !< Parameters to determine storage
                                                         !< terms and road condition
 
    real(8) :: depth
@@ -207,14 +207,14 @@ End Subroutine
 Subroutine initTemp(Tsurf, Tair,depth, phy, settings, ground, modelInput, surf)
    use RoadSurfVariables
    implicit none
-   type(physicalParameters), intent(IN) :: phy    !< Physical paremeters used in the model
-   type(modelSettings), intent(IN) :: settings    !< Variables for model settings
+   type(PhysicalParameters), intent(IN) :: phy    !< Physical paremeters used in the model
+   type(ModelSettings), intent(IN) :: settings    !< Variables for model settings
    Real(8), intent(IN) :: Tsurf                   !< Surface temperature
    Real(8), intent(IN) :: Tair                    !< Air temperature
    Real(8), intent(IN) :: depth                   !> Depth to calculate tsurfave
    type(inputArrays), intent(IN) :: modelInput    !< Arrays for model input data
-   type(groundVariables), intent(INOUT) :: ground !< Varibales for ground properties
-   type(surfaceVariables), intent(INOUT) :: surf  !< Variables for surface properties
+   type(GroundVariables), intent(INOUT) :: ground !< Varibales for ground properties
+   type(SurfaceVariables), intent(INOUT) :: surf  !< Variables for surface properties
 
    integer :: i, juld
    real(8) :: t_output
@@ -259,7 +259,7 @@ End Subroutine
 Subroutine initSurf(surf, wearOn)
    use RoadSurfVariables
    Implicit none
-   type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+   type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
    logical, intent(IN) :: wearOn
 
    surf%Q2Melt = 0.0
@@ -282,7 +282,7 @@ Subroutine InitParam(Albedo, phy,inputParam)
 
    type(InputParameters), intent(IN) :: inputParam          !< input parameters
                                                             !< given by modelRunner.cpp
-   type(physicalParameters), intent(INOUT) :: phy !< Physical paremeters used in
+   type(PhysicalParameters), intent(INOUT) :: phy !< Physical paremeters used in
                                                   !< the model
    real(8), intent(OUT) :: Albedo                  !< Surface albedo
    
@@ -330,8 +330,8 @@ End Subroutine
 Subroutine initVariables(ground, atm)
    use RoadSurfVariables
    Implicit none
-   type(groundVariables), intent(INOUT) :: ground !< Varibales for ground properties
-   type(atmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
+   type(GroundVariables), intent(INOUT) :: ground !< Varibales for ground properties
+   type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                 !< properties
 
    integer :: i
@@ -365,7 +365,7 @@ Subroutine initOutputArrays(SimLen, modelOutput)
    use RoadSurfVariables
    implicit None
    integer, intent(IN):: SimLen                     !< length of output data arrays
-   type(outputArrays), intent(INOUT) :: modelOutput !< Arrays for model output data
+   type(OutputArrays), intent(INOUT) :: modelOutput !< Arrays for model output data
 
    integer ::i
    Do i = 1, SimLen
@@ -385,7 +385,7 @@ subroutine initTsurfObsArrays(coupling)
    use RoadSurfVariables
    Implicit None
    integer :: i
-   type(couplingVariables), intent(INOUT) :: coupling !< variables used in
+   type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
                                                       !< coupling(adjusting
                                                       !< radiation to fit
                                                       !< observed surface temperature)
@@ -417,7 +417,7 @@ subroutine initSettings(inSettings, settings,inputParam,localParam)
                                                         !< given by modelRunner.cpp
    type(LocalParameters), intent(IN) :: localParam  !< Local parameters
                                                          !< given by modelrunner.cpp
-   type(modelSettings), intent(OUT) :: settings !< Variables for model settings
+   type(ModelSettings), intent(OUT) :: settings !< Variables for model settings
    logical :: int2Logical
    settings%SimLen = inSettings%SimLen
    settings%InitLenI = localParam%InitLenI
@@ -447,9 +447,9 @@ Subroutine condInit(condParam, surf,inputParam)
 
    type(InputParameters), intent(IN) :: inputParam      !< input parameters
                                                         !< given by modelRunner.cpp
-   type(surfaceVariables), intent(INOUT) :: surf        !< Variables for surface
+   type(SurfaceVariables), intent(INOUT) :: surf        !< Variables for surface
                                                         !< properties
-   type(roadCondParameters), intent(OUT) :: condParam   !< Parameters to
+   type(RoadCondParameters), intent(OUT) :: condParam   !< Parameters to
                                                         !< determine storage
                                                         !< terms and road condition
    ! * Wet snow density/thickness same as that of dry snow

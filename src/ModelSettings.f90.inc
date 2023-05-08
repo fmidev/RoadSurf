@@ -1,5 +1,5 @@
 !> Variables for model settings
-type modelSettings
+type ModelSettings
       integer:: InitLenI                    !< The length of initialization period,
                                             !< input timesteps
       integer:: SimLen                      !< Lenght of simulation
@@ -22,4 +22,4 @@ type modelSettings
                                             !< coefficient after coupling
 
       Integer :: outputStep                 !< Frequency of output in minutes
-end type modelSettings
+end type ModelSettings

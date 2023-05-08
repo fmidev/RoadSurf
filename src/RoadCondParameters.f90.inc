@@ -1,5 +1,5 @@
 !> Parameters to determine storage terms and road condition
-type roadCondParameters
+type RoadCondParameters
       Real(8) :: WDampLim                      !< Dry/Damp limit for water
       Real(8) :: WWetLim                       !< Damp/Wet limit for water
       Real(8) :: WWearLim                      !< Wear limit for water (below this
@@ -59,4 +59,4 @@ type roadCondParameters
       Logical :: forceSnowMelting              !< True if snow melting is forced
       Logical :: CanMeltingChangeTemperature   !< True if surface temperature is changed
                                                !< in melting
-end type roadCondParameters
+end type RoadCondParameters

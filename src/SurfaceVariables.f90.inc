@@ -1,5 +1,5 @@
 !> Variables for surface properties
-type surfaceVariables
+type SurfaceVariables
       real(8) :: TsurfAve            !< average temperature of the
                                      !< first two layers
       real(8) :: SrfWatmms           !< water storage (mm)
@@ -23,4 +23,4 @@ type surfaceVariables
                                      !< reduced by traffic wearing
 
       real(8):: TsurfOBS             !< surface temperature observation
-end type surfaceVariables
+end type SurfaceVariables

@@ -27,22 +27,22 @@ SUBROUTINE runsimulation(outPointers, inPointers,&
    integer:: i                                  !< index of inputdata time steps
 
    type(InputArrays) :: modelInput              !< Arrays for model input data
-   type(outputArrays) :: modelOutput            !< Arrays for model output data
-   type(physicalParameters) :: phy              !< Physical paremeters used in
+   type(OutputArrays) :: modelOutput            !< Arrays for model output data
+   type(PhysicalParameters) :: phy              !< Physical paremeters used in
                                                 !< the model
-   type(groundVariables) :: ground              !< Varibales for ground properties
-   type(surfaceVariables) :: surf               !< Variables for surface properties
+   type(GroundVariables) :: ground              !< Varibales for ground properties
+   type(SurfaceVariables) :: surf               !< Variables for surface properties
                                                 !< outside of car tyre tracks
-   type(atmVariables) :: atm                    !< Variables for atmospheric
+   type(AtmVariables) :: atm                    !< Variables for atmospheric
                                                 !< properties
                                                 !< properties
-   type(couplingVariables) :: coupling          !< variables used in coupling(adjusting
+   type(CouplingVariables) :: coupling          !< variables used in coupling(adjusting
                                                 !< radiation to fit observed
                                                 !< surface temperature)
 
-   type(modelSettings) :: settings              !< Variables for model settings
+   type(ModelSettings) :: settings              !< Variables for model settings
                                                 !< conditions
-   type(roadCondParameters) :: condParam        !< Parameters to determine
+   type(RoadCondParameters) :: condParam        !< Parameters to determine
                                                 !< storage terms and road condition
 
 !---------INITIALIZE----------------------------------------------------------
@@ -127,18 +127,18 @@ Subroutine roadModelOneStep(input_idxI, phy, ground, surf, atm,&
    Implicit None
    integer, intent(IN) :: input_idxI                !< current index I in input data
    type(inputArrays), intent(INOUT) :: modelInput      !< Arrays for model input data
-   type(couplingVariables), intent(IN) :: coupling  !< variables used in coupling
-   type(modelSettings), intent(INOUT) :: settings   !< Variables for model settings
-   type(physicalParameters), intent(INOUT) :: phy   !< Physical paremeters used
+   type(CouplingVariables), intent(IN) :: coupling  !< variables used in coupling
+   type(ModelSettings), intent(INOUT) :: settings   !< Variables for model settings
+   type(PhysicalParameters), intent(INOUT) :: phy   !< Physical paremeters used
                                                     !< in the model
-   type(groundVariables), intent(INOUT) :: ground   !< Varibales for ground
+   type(GroundVariables), intent(INOUT) :: ground   !< Varibales for ground
                                                     !< properties
-   type(surfaceVariables), intent(INOUT) :: surf    !< Variables for surface
+   type(SurfaceVariables), intent(INOUT) :: surf    !< Variables for surface
                                                     !< properties
-   type(atmVariables), intent(INOUT) :: atm         !< Variables for atmospheric
+   type(AtmVariables), intent(INOUT) :: atm         !< Variables for atmospheric
                                                     !< properties
 
-   type(roadCondParameters), intent(INOUT) :: condParam     !< Parameters to
+   type(RoadCondParameters), intent(INOUT) :: condParam     !< Parameters to
                                                             !< determine storage
                                                             !< terms and road
                                                             !< condition

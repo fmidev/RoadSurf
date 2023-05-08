@@ -1,5 +1,5 @@
 !> Variables for atmospheric properties
-type atmVariables
+type AtmVariables
       real(8) :: Tair                  !< air temperature (C)
       real(8) :: VZ                    !< wind speed (m/s)
       real(8) :: Tdew                  !<dew point temperature (C)
@@ -29,4 +29,4 @@ type atmVariables
       Integer :: SnowType              !< snow type (wet or dry)
       Integer :: PrecType              !< Precipitation type 
                                        !< (1=Water,2=Sleet,3=Snow)
-end type atmVariables
+end type AtmVariables

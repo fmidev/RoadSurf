@@ -7,8 +7,8 @@ Submodule (RoadSurf) prec2Storage
       module Subroutine PrecipitationToStorage(settings,CP,PrecPhase,atm,surf)
          use RoadSurfVariables
          
-         type(modelSettings),intent(IN)::settings      !> Variables for model settings
-         type(roadCondParameters),intent(IN)::CP       !< Parameters to determine
+         type(ModelSettings),intent(IN)::settings      !> Variables for model settings
+         type(RoadCondParameters),intent(IN)::CP       !< Parameters to determine
                                                        !< storage terms and road 
                                                        !< condition
          integer, intent(IN) :: PrecPhase              !< precPhase (Hail = 6;
@@ -17,8 +17,8 @@ Submodule (RoadSurf) prec2Storage
                                                        !< Snow = 3; Sleet = 2;
                                                        !< Rain = 1; Drizzle = 0;)
       
-         type(atmVariables),Intent(INOUT)::atm         !< Variables for atmpheric properties
-         type(surfaceVariables), Intent(INOUT) :: surf !< Variables for surface properties
+         type(AtmVariables),Intent(INOUT)::atm         !< Variables for atmpheric properties
+         type(SurfaceVariables), Intent(INOUT) :: surf !< Variables for surface properties
       
       ! ************* PRECIPTATION TYPE
          call CalcPrecType(PrecPhase, settings%DTSecs, atm, CP)
@@ -34,9 +34,9 @@ Subroutine WaterStorage(MaxPormms, WatWear, SrfExtmms, &
    Implicit none
 
    real(8), intent(IN) ::MaxPormms                 !< maximum water in asphalt pores
-   type(roadCondParameters), intent(IN) :: CP   !< Parameters to determine
+   type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
-   type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+   type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
 
    real(8), intent(INOUT) :: WatWear               !< Water storage reduction
                                                 !< caused by traffic
@@ -92,10 +92,10 @@ Subroutine SnowStorage(SrfExtmms, Melted, DTSecs, wearF, SrfPormms, &
    real(8), intent(IN) ::DTSecs                    !< Time step in seconds
    type(wearingFactors), intent(IN) :: wearF    !< wearing factors
    real(8), intent(IN) ::MaxPormms                 !< Maximum water content in pores
-   type(roadCondParameters), intent(INOUT) :: CP   !< Parameters to determine
+   type(RoadCondParameters), intent(INOUT) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
-   type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
-   type(atmVariables), Intent(INOUT) :: atm     !< Variables for atmospheric
+   type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+   type(AtmVariables), Intent(INOUT) :: atm     !< Variables for atmospheric
                                                 !< properties
 
    real(8), intent(INOUT) :: SrfExtmms             !< surface water content
@@ -202,10 +202,10 @@ Subroutine IceStorage(Melted, SrfExtmms, SrfPormms, MaxPormms, &
 
    real(8), intent(IN) :: MaxPormms                !< Maximum water content in pores
    real(8), intent(IN) :: DTSEcs                   !< time step in seconds
-   type(roadCondParameters), intent(IN) :: CP   !< Parameters to determine
+   type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
    type(wearingFactors), intent(IN) :: wearF    !< wearing factors
-   type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+   type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
 
    real(8), intent(INOUT) :: Melted                !< Melted amount (metres/timestep)
    real(8), intent(OUT) :: SrfExtmms               !< surface water content
@@ -271,9 +271,9 @@ Subroutine DepositStorage(DepWear, SrfExtmms, SrfPormms, &
    real(8), intent(IN) :: DepWear                  !< Deposit reduction caused by
                                                 !< traffic
    real(8), intent(IN) :: MaxPormms                !< Maximum water content in pores
-   type(roadCondParameters), intent(IN) :: CP   !< Parameters to determine
+   type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
-   type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+   type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
    real(8), intent(OUT) :: SrfExtmms               !< surface water content
    real(8), intent(OUT) :: SrfPormms               !< water content in pores
 
@@ -323,14 +323,14 @@ Subroutine melting(HStor, inCouplingPhase, TsurfObsLast, HS, TmpNw,ZDpth,depth,&
    logical, intent(IN) ::inCouplingPhase            !< true if in coupling phase
    real(8), dimension(16), intent(IN):: HS             !< Heat capacity in intensity units
                                                     !< (W/m^2K)
-   type(surfaceVariables), intent(INOUT) :: surf    !< Variables for surface
+   type(SurfaceVariables), intent(INOUT) :: surf    !< Variables for surface
                                                     !< properties
 
    real(8), dimension(0:16), intent(INOUT):: TmpNw     !< Next time step layer
                                                     !< temperatures
    real(8), dimension(16), intent(INOUT):: ZDpth      !< Layer depths
    real(8) :: depth                                 !< depth to calculate outpu temp
-   type(roadCondParameters), intent(IN) :: CP   !< Parameters to determine
+   type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
    real(8) :: QAvail
    real(8) :: QLeftOver
@@ -409,9 +409,9 @@ Subroutine NewMeltFreezeHeat(DTSecs, surf, CP)
    Implicit None
 
    real(8), intent(IN) ::DTSecs                    !< Model time step in seconds
-   type(roadCondParameters), intent(IN) :: CP   !< Parameters to determine
+   type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
-   type(surfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
+   type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
 
    ! * Melting for snow and ice
    surf%Q2Melt = 0.0 ! Default
