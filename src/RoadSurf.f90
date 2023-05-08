@@ -218,7 +218,7 @@ Module RoadSurf
          use RoadSurfVariables
          real(8), intent(IN)    :: Tph                   !< time steps per hour
          type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
-         type(wearingFactors), intent(OUT) :: wearF   !< wearing factors
+         type(WearingFactors), intent(OUT) :: wearF   !< wearing factors
          Real(8), intent(INOUT)    :: Snow2IceFac        !< Snow to ice transition factor
       end subroutine wearFactors
       !> Determines road surface condition for program Simulation      !
@@ -236,7 +236,7 @@ Module RoadSurf
                                                           !< properties
          type(AtmVariables), Intent(INOUT) :: atm         !< Variables for atmospheric
                                                           !< properties
-         type(wearingFactors),intent(IN) :: wearF         !< wearing factors
+         type(WearingFactors),intent(IN) :: wearF         !< wearing factors
       end subroutine roadCond
       !> Calculates albedo
       module Subroutine calcAlbedo(albedo, surf, cp)

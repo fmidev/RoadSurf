@@ -539,7 +539,7 @@ subroutine couplingCofWithInputRadCof(inputRC, coupling, i, settings)
    Implicit none
 
    integer, intent(IN) :: i                     !<index for point in input data
-   type(inputRadiationCoefficient), intent(IN) :: inputRC !< Variables used when
+   type(InputRadiationCoefficient), intent(IN) :: inputRC !< Variables used when
                                                           !< radiation
                                                           !< coefficient is
                                                           !< given as input

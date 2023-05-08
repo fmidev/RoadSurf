@@ -145,7 +145,7 @@ Subroutine roadModelOneStep(input_idxI, phy, ground, surf, atm,&
    type(inputParameters), intent(IN) :: inputParam  !< model input parameters
    type(LocalParameters), intent(IN) :: localParam  !< Local parameters
                                                     !< given by modelrunner.cpp
-   type(wearingFactors) :: wearF   !< wearing factors
+   type(WearingFactors) :: wearF   !< wearing factors
 
    !Determine wheter the precipitation is rain or snow and add to storage
    call PrecipitationToStorage(settings,condParam,modelInput%PrecPhase(input_idxI),&

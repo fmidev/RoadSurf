@@ -90,7 +90,7 @@ Subroutine SnowStorage(SrfExtmms, Melted, DTSecs, wearF, SrfPormms, &
    Implicit None
 
    real(8), intent(IN) ::DTSecs                    !< Time step in seconds
-   type(wearingFactors), intent(IN) :: wearF    !< wearing factors
+   type(WearingFactors), intent(IN) :: wearF    !< wearing factors
    real(8), intent(IN) ::MaxPormms                 !< Maximum water content in pores
    type(RoadCondParameters), intent(INOUT) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
@@ -204,7 +204,7 @@ Subroutine IceStorage(Melted, SrfExtmms, SrfPormms, MaxPormms, &
    real(8), intent(IN) :: DTSEcs                   !< time step in seconds
    type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
-   type(wearingFactors), intent(IN) :: wearF    !< wearing factors
+   type(WearingFactors), intent(IN) :: wearF    !< wearing factors
    type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
 
    real(8), intent(INOUT) :: Melted                !< Melted amount (metres/timestep)

@@ -1,5 +1,5 @@
 !> wearing ratios due to traffic
-type wearingFactors
+type WearingFactors
       Real(8)    :: SnowTran      !< Snow transform factor : mm/timestep,
       Real(8)    :: SnowTran2     !< Snow transform factor nigth,
       Real(8)    :: SnowTranDef   !< default value for transfor
@@ -12,4 +12,4 @@ type wearingFactors
       Real(8)    :: IceWear2SW    !< Ice wear2 by sun: mm/timestep
       Real(8)    :: WatWear       !< Water wear : mm/timestep
 
-end type wearingFactors
+end type WearingFactors

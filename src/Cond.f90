@@ -19,7 +19,7 @@ submodule (RoadSurf) Cond
                                                           !< properties
          type(AtmVariables), Intent(INOUT) :: atm         !< Variables for atmospheric
                                                           !< properties
-         type(wearingFactors),intent(IN) :: wearF         !< wearing factors
+         type(WearingFactors),intent(IN) :: wearF         !< wearing factors
          real    :: SrfExtmms, SrfPormms !< water outside and insied porous media
          Real    :: Melted               !< Melted amount (metres/timestep)
       
@@ -67,7 +67,7 @@ submodule (RoadSurf) Cond
          use RoadSurfVariables
          real(8), intent(IN)    :: Tph                   !< time steps per hour
          type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
-         type(wearingFactors), intent(OUT) :: wearF   !< wearing factors
+         type(WearingFactors), intent(OUT) :: wearF   !< wearing factors
          Real(8), intent(INOUT)    :: Snow2IceFac        !< Snow to ice transition factor
       
          ! ************* WEAR FACTORS
