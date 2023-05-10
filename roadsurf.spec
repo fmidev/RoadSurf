@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 0.1.2
+Version: 0.1.3
 Release: 1%{?dist}.fmi
 License: GPL
 Group: Development/Tools
@@ -53,6 +53,9 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
+* Wed May 10 2023 Mika Heiskanen <mheiskan@rhel8.dev.fmi.fi> - 0.1.3-1.fmi
+- Improved class and method names
+
 * Tue May  2 2023 Mika Heiskanen <mheiskan@rhel8.dev.fmi.fi> - 0.1.2-1.fmi
 - Removed obsolete iterative heat balance code
 
