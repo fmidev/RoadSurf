@@ -11,7 +11,7 @@ The library does not contain all of the features included in the original FMI ro
 
 ## Licence
 
-The library is published with GNU Lesser General Public License v2.1.
+The library is published with MIT License
 
 ## How to contribute
 
