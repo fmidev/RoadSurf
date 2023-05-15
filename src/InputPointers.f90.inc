@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> pointers to input data arrays given by modelRunner.cpp
 Type, Bind(C) :: InputPointers
       INTEGER(C_INT) :: inputLen        !<input data length

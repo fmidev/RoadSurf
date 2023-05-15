@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> Arrays for model output data
 type OutputArrays
       REAL(C_DOUBLE), POINTER :: TsurfOut(:)            !< Road surface temperature (C)

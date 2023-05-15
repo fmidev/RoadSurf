@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> local parameters given by modelRunner.cpp
 Type, Bind(C) :: LocalParameters
       REAL(C_DOUBLE) :: tair_relax;     !< tair for relaxation

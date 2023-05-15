@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> model settings given as input by modelRunner.cpp
 Type, Bind(C) :: InputSettings
       INTEGER(C_INT) :: SimLen                  !< Lenght of simulation

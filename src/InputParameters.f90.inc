@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> input parameters given by modelRunner.cpp
 Type, Bind(C) :: InputParameters
 

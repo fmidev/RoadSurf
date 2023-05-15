@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> Variables for surface properties
 type SurfaceVariables
       real(8) :: TsurfAve            !< average temperature of the

@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> pointers to output data arrays given by modelRunner.cpp
 Type, Bind(C) :: OutputPointers
 

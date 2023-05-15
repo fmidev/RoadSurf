@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> wearing ratios due to traffic
 type WearingFactors
       Real(8)    :: SnowTran      !< Snow transform factor : mm/timestep,

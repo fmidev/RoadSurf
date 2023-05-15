@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> Variables for ground properties
 type GroundVariables
       real(8) :: Albedo                        !< surface albedo

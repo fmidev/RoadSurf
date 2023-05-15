@@ -1,3 +1,6 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
+
 !> Physical parameters used in the model
 type PhysicalParameters
       real(8) :: VK_Const  !< Von Karman's konstant

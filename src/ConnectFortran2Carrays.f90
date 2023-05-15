@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 Submodule (RoadSurf) ConnectArrays
 
    Implicit None

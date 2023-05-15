@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !Calculates sune levation and azimuth angle
 Subroutine SunPosition(modelInput,localParam,i,elevation_angle,azimuth_angle)
       use RoadSurfVariables

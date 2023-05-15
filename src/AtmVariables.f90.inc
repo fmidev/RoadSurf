@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> Variables for atmospheric properties
 type AtmVariables
       real(8) :: Tair                  !< air temperature (C)

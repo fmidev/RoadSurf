@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> Parameters to determine storage terms and road condition
 type RoadCondParameters
       Real(8) :: WDampLim                      !< Dry/Damp limit for water

@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> input data arrays
 Type :: InputArrays
       INTEGER(C_INT), POINTER :: timeForFortran(:) !< time as 1D array with

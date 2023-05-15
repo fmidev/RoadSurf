@@ -1,5 +1,4 @@
 #pragma once
-
 #define PRECIPITATION_NONE 0
 #define PRECIPITATION_RAIN 1
 #define PRECIPITATION_SLEET 2

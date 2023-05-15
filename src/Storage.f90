@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 #include "Constants.h"
 
 Submodule (RoadSurf) prec2Storage

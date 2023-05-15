@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !> variables used in coupling (adjusting radiation to fit observed surface temperature)
 type CouplingVariables
       real(8), dimension(0:16)::TmpSave            !< Saved layer temperatures at

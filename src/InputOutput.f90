@@ -1,4 +1,5 @@
-
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !>Set input parameters defined in modelRunner.cpp
 Subroutine setInputParam(localParam, atm, coupling, settings)
 

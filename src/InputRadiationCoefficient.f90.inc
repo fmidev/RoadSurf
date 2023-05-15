@@ -1,3 +1,5 @@
+!MIT License
+!Copyright (c) 2023 FMI Open Development
 !>Variables used when radiation coefficient is given as input
 !>NOT CURRENTLY IN USE IN THE MODEL
 type InputRadiationCoefficient
