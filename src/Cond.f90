@@ -22,8 +22,8 @@ submodule (RoadSurf) Cond
          type(AtmVariables), Intent(INOUT) :: atm         !< Variables for atmospheric
                                                           !< properties
          type(WearingFactors),intent(IN) :: wearF         !< wearing factors
-         real    :: SrfExtmms, SrfPormms !< water outside and insied porous media
-         Real    :: Melted               !< Melted amount (metres/timestep)
+         real(8)    :: SrfExtmms, SrfPormms !< water outside and insied porous media
+         Real(8)    :: Melted               !< Melted amount (metres/timestep)
       
       
       
@@ -148,7 +148,7 @@ Subroutine CalcPrecType(PrecPhase, DTSecs, atm, CP)
                                                 !< FreezingDrizzle = 4; Snow = 3;
                                                 !< Sleet = 2; Rain = 1; Drizzle = 0;)
 
-   real, intent(IN):: DTSecs                    !< Input time step in seconds
+   real(8), intent(IN):: DTSecs                    !< Input time step in seconds
    type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
    type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
