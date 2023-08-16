@@ -83,7 +83,7 @@ Submodule (RoadSurf) ValueControl
       
       end subroutine CheckValues
       !>set values to Tair etc
-      module Subroutine SetCurrentValues(i, Tmp, modelInput, atm, settings, surf,coupling,ground)
+      module Subroutine SetCurrentValues(i, modelInput, atm, settings, surf,coupling,ground)
          use RoadSurfVariables
       
          integer, intent(IN) :: i                     !< index of inputdata time steps
@@ -100,7 +100,6 @@ Submodule (RoadSurf) ValueControl
          type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
          type(GroundVariables), intent(INOUT) :: ground   !< Varibales for ground
                                                           !< properties
-         real(8), dimension(0:16), intent(INOUT)::Tmp    !< Temperatures for each layer
       
          real(8) ::depth                                  !< depth to take temperature
          real(8) :: t_output                              !< temperature at depth
@@ -110,7 +109,7 @@ Submodule (RoadSurf) ValueControl
          atm%VZ = modelInput%VZ(i)
          atm%Rhz = modelInput%RHz(i)
          atm%PrecInTStep = modelInput%prec(i)/3600*settings%DTSecs
-         Tmp(0) = atm%Tair
+         ground%Tmp(0) = atm%Tair
       
          !call CalcTDew(REAL(atm%Tair, 8), atm%TDew, REAL(atm%Rhz, 8))
          !If in initialization phase, set surface temperature to observed value
@@ -121,8 +120,8 @@ Submodule (RoadSurf) ValueControl
                if (.not. settings%use_coupling .or. &
                    i < coupling%couplingStartI(coupling%CoupPhaseN)) then
                   surf%TSurfObs = modelInput%TsurfOBS(i)
-                  Tmp(1) = surf%TSurfObs
-                  Tmp(2) = surf%TSurfObs
+                  ground%Tmp(1) = surf%TSurfObs
+                  ground%Tmp(2) = surf%TSurfObs
                   if (settings%tsurfOutputDepth>=0.0) Then
                      depth=settings%tsurfOutputDepth
                   else
@@ -132,10 +131,10 @@ Submodule (RoadSurf) ValueControl
         
                   !interpolate temperature from given depth if if is not missihg
                   if (depth>=0)Then
-                     Call getTempAtDepth(ground%Tmp,ground%ZDpth,depth,t_output)
+                     Call getTempAtDepth(ground,depth,t_output)
                      surf%TsurfAve=t_output
                   else
-                     surf%TSurfAve = (Tmp(1) + Tmp(2))/2.0
+                     surf%TSurfAve = (ground%Tmp(1) + ground%Tmp(2))/2.0
                   end if
       
                else
@@ -189,7 +188,7 @@ Subroutine lastValues(modelInput, atm, settings, ground, surf)
    depth=modelInput%depth(settings%SimLen)
    !Calculate temperaturea at given depth
    if (depth>=0) Then
-      Call getTempAtDepth(ground%Tmp,ground%ZDpth,depth,t_output)
+      Call getTempAtDepth(ground,depth,t_output)
       surf%TsurfAve=t_output
    else
       surf%TSurfAve = (ground%Tmp(1) + ground%Tmp(2))/2.0 !Average temperature of 

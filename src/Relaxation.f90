@@ -7,14 +7,15 @@ Submodule (RoadSurf) RelaxModule
    !>Use relaxation to air temperature, wind speed and relative humidity
    !> after initialization phase. This is done to avoid jump when moving
    !> from observed atmospheric values to forecasted ones.
-   module Subroutine RelaxationOperations(i, atm, settings,Tmp)
+   module Subroutine RelaxationOperations(i, atm, settings,ground)
       use RoadSurfVariables
    
       integer, intent(IN) :: i                     !< index of inputdata time steps
       type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
       type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                    !< properties
-      real(8), dimension(0:16), intent(INOUT)::Tmp    !< Temperatures for each layer
+      type(groundVariables), intent(INOUT) :: ground    !< Varibales for ground
+                                                        !< properties
       real(8) :: DTs
       integer :: initLI
       DTs = settings%DTSecs
@@ -32,7 +33,7 @@ Submodule (RoadSurf) RelaxModule
       if (i > initLI) Then
          atm%Tair = atm%Tair - (atm%TairR - atm%TairInitEnd) &
                     *exp(-((DTs*i) - (DTs*initLI))/(4.*3600.))
-         Tmp(0)=atm%Tair
+         ground%Tmp(0)=atm%Tair
          atm%VZ = atm%VZ - (atm%VZR - atm%VZInitEnd) &
                   *exp(-((DTs*i) - (DTs*initLI))/(4.*3600.))
          atm%Rhz = atm%Rhz - (atm%RhzR - atm%RhzInitEnd) &

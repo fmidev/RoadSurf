@@ -48,8 +48,8 @@ Submodule (RoadSurf) Coupling
          !they can be restored later
          if (i == coupling%couplingStartI(coupling%CoupPhaseN) .and. &
              coupling%Coupling_iterations == 0) Then
-            call saveDataForCoupling(i, ground%Albedo, ground%Tmp, coupling, surf, &
-                                     modelInput)
+            call saveDataForCoupling(i, ground, coupling, surf, &
+                                     modelInput,settings)
             !Initialize coefficients
             coupling%SwRadCof = 1.0
             coupling%LWRadCof = 1.0
@@ -60,8 +60,8 @@ Submodule (RoadSurf) Coupling
          !If coupling is started again, return to start of coupling period
          if (coupling%start_coupling_again) Then
             !Restore parameters at the beginning of coupling
-            call uploadDataForCoupling(i, ground%Albedo, ground%Tmp, coupling, &
-                                       surf, modelInput)
+            call uploadDataForCoupling(i, ground, coupling, &
+                                       surf, modelInput,settings)
             coupling%start_coupling_again = .false.
             !Set coefficient for short wave radiation if it has larger value than
             !Long wave radiation or sky view factor is NOT used
@@ -169,20 +169,21 @@ Subroutine initCoupling(coupling)
 End Subroutine initCoupling
 
 !>Save data at the beginning of the coupling period
-Subroutine saveDataForCoupling(datai, Albedo, Tmp, coupling, surf,&
- modelInput)
+Subroutine saveDataForCoupling(datai, ground, coupling, surf,&
+ modelInput, settings)
    use RoadSurfVariables
    implicit none
 
    integer, intent(IN):: datai                  !<index for point in input data
-   real(8), intent(IN) :: Albedo                !< Surface albedo
-   real(8), dimension(0:16), intent(IN)::Tmp    !< Temperatures for each layer
+   type(groundVariables), intent(INOUT) :: ground       !< Varibales for ground
+                                                        !< properties
    type(SurfaceVariables), intent(IN) :: surf   !< Variables for surface properties
    type(inputArrays), intent(IN) :: modelInput  !< Arrays for model
    type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
                                                       !< coupling(adjusting
                                                       !< radiation to fit
                                                       !< observed surface temperature)
+   type(modelSettings), intent(IN) :: settings  !< Variables for model settings
    integer :: i
    integer :: couplingLen !Lenght of coupling period
    couplingLen=coupling%couplingEndI(1)-coupling%couplingStartI(1)+1
@@ -194,10 +195,10 @@ Subroutine saveDataForCoupling(datai, Albedo, Tmp, coupling, surf,&
    coupling%srfIce2mmsSave = surf%SrfIce2mms
    coupling%srfDepmmsSave = surf%SrfDepmms
    coupling%srfSnowmmsSave = surf%SrfSnowmms
-   coupling%AlbedoSave = Albedo
+   coupling%AlbedoSave = ground%Albedo
    coupling%VeryColdSave = surf%VeryCold
-   do i = 0, 16
-      coupling%TmpSave(i) = Tmp(i)
+   do i = 0, settings%NLayers+1
+      coupling%TmpSave(i) = ground%Tmp(i)
    end do
 
    do i=1,couplingLen
@@ -209,16 +210,15 @@ Subroutine saveDataForCoupling(datai, Albedo, Tmp, coupling, surf,&
 end subroutine saveDataForCoupling
 
 !>Upload saved data if coupling is started again
-Subroutine uploadDataForCoupling(datai, Albedo, Tmp, coupling, surf,&
- modelInput)
+Subroutine uploadDataForCoupling(datai, ground, coupling, surf,&
+ modelInput,settings)
    use RoadSurfVariables
    implicit none
 
    integer, intent(INOUT):: datai                       !<index for point in
                                                         !< input data
-   real(8), intent(INOUT) :: Albedo                        !<Surface albedo
-   real(8), dimension(0:16), intent(INOUT)::Tmp            !< Temperatures for each
-                                                        !< layer
+   type(groundVariables), intent(INOUT) :: ground       !< Varibales for ground
+                                                        !< properties
    type(CouplingVariables), intent(INOUT) :: coupling   !< variables used in
                                                         !< coupling(adjusting
                                                         !< radiation to fit
@@ -228,6 +228,7 @@ Subroutine uploadDataForCoupling(datai, Albedo, Tmp, coupling, surf,&
    type(SurfaceVariables), intent(INOUT) :: surf        !< Variables for surface
                                                         !< properties
    type(inputArrays), intent(INOUT) :: modelInput          !< Arrays for model
+   type(modelSettings), intent(IN) :: settings  !< Variables for model settings
 
    integer :: i,couplingLen
 
@@ -239,10 +240,10 @@ Subroutine uploadDataForCoupling(datai, Albedo, Tmp, coupling, surf,&
    surf%srfIce2mms = coupling%SrfIce2mmsSave
    surf%srfDepmms = coupling%SrfDepmmsSave
    surf%srfSnowmms = coupling%SrfSnowmmsSave
-   Albedo = coupling%AlbedoSave
+   ground%Albedo = coupling%AlbedoSave
    surf%VeryCold = coupling%VeryColdSave
-   do i = 0, 16
-      Tmp(i) = coupling%TmpSave(i)
+   do i = 0, settings%NLayers+1
+      ground%Tmp(i) = coupling%TmpSave(i)
    end do
 
    do i=1,couplingLen
