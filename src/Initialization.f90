@@ -182,7 +182,7 @@ subroutine ground_prop_init(NLayers,ground)
    use RoadSurfVariables
    implicit none
    Integer, intent(IN) :: Nlayers           !< Number of ground layers
-   type(groundVariables), intent(OUT) :: ground     !< Variables for ground
+   type(groundVariables), intent(INOUT) :: ground     !< Variables for ground
                                                     !< properties
 
    Integer :: j, i
@@ -219,7 +219,7 @@ Subroutine initDepth(ground, NLayers)
    implicit none
 
    integer, intent(IN)::NLayers             !< Number of ground layers
-   type(groundVariables), intent(OUT) :: ground     !< Variables for ground
+   type(groundVariables), intent(INOUT) :: ground     !< Variables for ground
                                                     !< properties
    real(8):: ZAdd
    integer ::I
