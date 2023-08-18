@@ -106,18 +106,19 @@ Module RoadSurf
    !> Use relaxation to air temperature, wind speed and relative humidity
    !> after initialization phase. This is done to avoid jump when moving
    !> from observed atmospheric values to forecasted ones.
-      module Subroutine RelaxationOperations(i, atm, settings,Tmp)
+      module Subroutine RelaxationOperations(i, atm, settings,ground)
          use RoadSurfVariables
    
          integer, intent(IN) :: i                     !< index of inputdata time steps
          type(ModelSettings), intent(IN) :: settings  !< Variables for model settings
          type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                       !< properties
-         real(8), dimension(0:16), intent(INOUT)::Tmp    !< Temperatures for each layer
+         type(GroundVariables), intent(INOUT) :: ground   !< Varibales for ground
+                                                          !< properties
       end subroutine RelaxationOperations
 
       !>set values to Tair etc
-      module Subroutine SetCurrentValues(i, Tmp, modelInput, atm, settings, surf,coupling,ground)
+      module Subroutine SetCurrentValues(i, modelInput, atm, settings, surf,coupling,ground)
          use RoadSurfVariables
       
          integer, intent(IN) :: i                     !< index of inputdata time steps
@@ -134,7 +135,6 @@ Module RoadSurf
          type(SurfaceVariables), intent(INOUT) :: surf !< Variables for surface properties
          type(GroundVariables), intent(INOUT) :: ground   !< Varibales for ground
                                                           !< properties
-         real(8), dimension(0:16), intent(INOUT)::Tmp    !< Temperatures for each layer
 
       end subroutine SetCurrentValues
       !>Calculates values for next time step using heat balance model

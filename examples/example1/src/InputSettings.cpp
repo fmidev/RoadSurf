@@ -84,6 +84,7 @@ InputSettings::InputSettings(const Json::Value &pJson, const Options &pOptions)
     override(&use_relaxation, json, "use_relaxation");
     override(&DTSecs, json, "DTSecs");
     override(&tsurfOutputDepth, json, "tsurfOutputDepth");
+    override(&NLayers, json, "NLayers");
     override(&couplingEffectReduction, json, "couplingEffectReduction");
   }
   const auto json2 = pJson.get("output", nulljson);

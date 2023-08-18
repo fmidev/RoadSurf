@@ -66,17 +66,17 @@ Submodule (RoadSurf) BalanceModel
          end if
       
          !> Calculate the heat needed to melt/freeze the whole uppermost snow/ice layer.
-         call NewMeltFreezeHeat(settings%DTSecs, surf, condParam)
+    !     call NewMeltFreezeHeat(settings%DTSecs, surf, condParam)
          !Check if melting
-         call melting(ground%HStor, coupling%inCouplingPhase, coupling%lastTsurfObs, &
-                      ground%HS, ground%TmpNw, ground%ZDpth, depth,surf, &
+         call melting(coupling%inCouplingPhase, coupling%lastTsurfObs, &
+                      ground, depth,surf, &
                       condParam)
       
          ground%Tmp = ground%TmpNw
         
          !If depth is set, interpolate temperature from given depth
          if (depth>=0)Then
-            Call getTempAtDepth(ground%Tmp,ground%ZDpth,depth,t_output)
+            Call getTempAtDepth(ground,depth,t_output)
             surf%TsurfAve=t_output
          else
          !Otherwise use average of the first two layers
@@ -98,7 +98,7 @@ Subroutine calcProfile(Nlayers, DTSecs, TrfFric, ground, atm)
                                                 !< properties
    type(GroundVariables), intent(INOUT) :: ground !< Varibales for ground properties
    integer :: j
-   Real(8) :: Gflux(0:16)                       !< Heat flux
+   Real(8),allocatable :: Gflux(:)                 !< Heat flux
    Integer :: NLayerTemp                        !< Number of layers to caclulate
                                                 !< temperature
    !Brutsaert, W, Evaporation into the Atmosphere. Theory, History, and
@@ -106,7 +106,7 @@ Subroutine calcProfile(Nlayers, DTSecs, TrfFric, ground, atm)
    
    !Campbell, Gaylon S., Soil Physics wit Basic. Elsevier, 
    !the Netherlands, 1985
-
+   allocate (Gflux(0:NLayers+1))
    NLayerTemp = NLayers
 
    atm%SensibleHeatFlux = atm%BlCond*(ground%Tmp(0) - ground%Tmp(1))
@@ -387,32 +387,32 @@ Subroutine SetDayDependendVariables(settings, surf, modelInput, atm, inputIdx)
 End subroutine SetDayDependendVariables
 
 !Give interpolated temperature at certain depth
-Subroutine getTempAtDepth(Tmp,ZDpth,depth,output_tsurf)
+Subroutine getTempAtDepth(ground,depth,output_tsurf)
+   use RoadSurfVariables
    Implicit None
-   real(8), dimension(0:16), intent(IN):: Tmp          !< Temperatures for each layer
-   real(8), dimension(16),intent(IN):: ZDpth           !< Depths of ground layers
+   type(GroundVariables), intent(INOUT) :: ground   !< Ground related variables
    Real(8),intent(IN) :: depth                      !< depth for output temperature
    Real(8),intent(OUT) :: output_tsurf              !< output temperature
    Integer :: idx,zlen
 
-   zlen=size(ZDpth)
+   zlen=size(ground%ZDpth)
    !if depth is 0.0 return temperature of the first layer
    if (abs(depth-0.0)<0.00001) Then
-      output_tsurf=Tmp(1)
+      output_tsurf=ground%Tmp(1)
    !if depth is greatern than the depth of the last layer return
    !< the temperature of the last layer
-   else if (depth>ZDpth(zlen)) Then
-      output_tsurf=Tmp(zlen)
+   else if (depth>ground%ZDpth(zlen)) Then
+      output_tsurf=ground%Tmp(zlen)
    else
      !Determine where the given depth is in relation to the depth array
      Do idx=1,zlen-1
-        if (depth>ZDpth(idx) .AND. depth <= ZDpth(idx+1)) Then
+        if (depth>ground%ZDpth(idx) .AND. depth <= ground%ZDpth(idx+1)) Then
            EXIT
         end if
      end do 
      !Interpoilate temperature to the given depth    
-     output_tsurf=Tmp(idx)+(depth-ZDpth(idx))*&
-                  (Tmp(idx+1)-Tmp(idx))/(ZDpth(idx+1)-ZDpth(idx))
+     output_tsurf=ground%Tmp(idx)+(depth-ground%ZDpth(idx))*&
+                  (ground%Tmp(idx+1)-ground%Tmp(idx))/(ground%ZDpth(idx+1)-ground%ZDpth(idx))
    end if
 End subroutine getTempAtDepth
 

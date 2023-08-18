@@ -88,24 +88,23 @@ Subroutine initVariablesAndParameters(modelInput, &
    real(8) :: depth
    real(8) ::t_output
    settings%simulation_failed = .false.
-   settings%NLayers = 15
 
    settings%Tph = settings%DTSecs/3600.0 !Time steps per hour
 
    !Initialize ground layer depths, temperature profile, physical parameters
    !and  ground physical properties
-   call initDepth(ground%ZDpth, settings%NLayers)
+   call allocator(settings,ground,coupling)
+   call initDepth(ground, settings%NLayers)
    call initSurf(surf, .true.)
    call InitParam(ground%Albedo, phy,inputParam)
 
    call initTemp(modelInput%TsurfOBS(1), modelInput%Tair(1), &
                 modelInput%depth(1), phy, settings, ground, modelInput, surf)
 
-   call initVariables(ground, atm)
+   call initVariables(ground, atm,settings)
    
    call HCapValues(phy)
-   call ground_prop_init(settings%NLayers, ground%ZDpth, ground%Wcont, ground%DyC, &
-                         ground%DyK)
+   call ground_prop_init(settings%NLayers, ground)
    call CalcCC(settings%NLayers, phy, ground)
    call CalcHCapHCond(settings%NLayers, settings%DTSecs, phy, ground, atm)
 
@@ -130,7 +129,7 @@ Subroutine initVariablesAndParameters(modelInput, &
    depth=modelInput%depth(1)
    !Calculate temperaturea at given depth
    if (depth>=0) Then
-      Call getTempAtDepth(ground%Tmp,ground%ZDpth,depth,t_output)
+      Call getTempAtDepth(ground,depth,t_output)
       surf%TsurfAve=t_output
    else
       surf%TSurfAve = (ground%Tmp(1) + ground%Tmp(2))/2.0 !Average temperature of 
@@ -147,25 +146,53 @@ Subroutine initVariablesAndParameters(modelInput, &
 
 end subroutine
 
+!>Allocates model output and input arrays
+Subroutine allocator(settings,ground,coupling)
+   use RoadSurfVariables
+   Implicit None
+
+   type(modelSettings), intent(INOUT) :: settings   !< Variables for model settings
+   type(groundVariables), intent(OUT) :: ground     !< Variables for ground
+                                                    !< properties
+   type(couplingVariables), intent(OUT) :: coupling     !< variables used in
+                                                        !< coupling(adjusting
+                                                        !< radiation to fit
+                                                        !< observed surface
+                                                        !< temperature)
+
+   
+   allocate (ground%condDZ(settings%NLayers+1))
+   allocate (ground%capDZ(settings%NLayers+1))
+   allocate (ground%Wcont(settings%NLayers+1))
+   allocate (ground%VSH(settings%NLayers+1))
+   allocate (ground%HS(settings%NLayers+1))
+   allocate (ground%CC(settings%NLayers+1))
+   allocate (ground%Tmp(0:settings%NLayers+1))
+   allocate (ground%TmpNw(0:settings%NLayers+1))
+   allocate (ground%DyC(settings%NLayers+1))
+   allocate (ground%DyK(settings%NLayers+1))
+   allocate (ground%ZDpth(settings%NLayers+1))
+   allocate (ground%GCond(0:settings%NLayers+1))
+   allocate (coupling%TmpSave(0:settings%NLayers+1))
+
+end Subroutine
+
 !>Initialization of ground heat capacity and conductivity
-subroutine ground_prop_init(NLayers, ZDpth, Wcont, DyC, DyK)
+subroutine ground_prop_init(NLayers,ground)
+   use RoadSurfVariables
    implicit none
    Integer, intent(IN) :: Nlayers           !< Number of ground layers
-   Real(8), Dimension(16), intent(IN):: ZDpth  !< Depths of ground layers
-   Real(8), Dimension(16), intent(OUT) :: DyC  !< Layers thicknesses for heat
-                                            !< capacity calculation
-   Real(8), Dimension(16), intent(OUT) ::DyK   !< Layer thicknesses for heat conductivity
-                                            !< calculation
-   Real(8), Dimension(16), intent(OUT)::Wcont  !< layer water content
+   type(groundVariables), intent(INOUT) :: ground     !< Variables for ground
+                                                    !< properties
 
    Integer :: j, i
    Integer::ConductivityLayers              !<Number of layers to calcuate
                                             !< conductivity
 
    !Calculate depth difference between layers (mid point - mid point)
-   DyC(1) = (ZDpth(2) - ZDpth(1))/2.0
+   ground%DyC(1) = (ground%ZDpth(2) - ground%ZDpth(1))/2.0
    DO j = 2, Nlayers
-         DyC(j) = (ZDpth(j + 1) - ZDpth(j - 1))/2.0
+         ground%DyC(j) = (ground%ZDpth(j + 1) - ground%ZDpth(j - 1))/2.0
    END DO
 
    ConductivityLayers = NLayers
@@ -173,34 +200,36 @@ subroutine ground_prop_init(NLayers, ZDpth, Wcont, DyC, DyK)
    !Calculate the thicknesses of individual layers
    Do j = 1, ConductivityLayers
 
-      DyK(j) = ZDpth(j + 1) - ZDpth(j)
+      ground%DyK(j) = ground%ZDpth(j + 1) - ground%ZDpth(j)
 
    END DO
    !Water content
-   WCont(1) = 0.01
-   WCont(2) = 0.01
-   WCont(3) = 0.3
-   WCont(4) = 0.3
+   ground%WCont(1) = 0.01
+   ground%WCont(2) = 0.01
+   ground%WCont(3) = 0.3
+   ground%WCont(4) = 0.3
    Do I = 5, NLayers
-      WCont(I) = 0.3
+      ground%WCont(I) = 0.3
    end do
 End Subroutine ground_prop_init
 
 !>Initialize depth array
-Subroutine initDepth(ZDpth, NLayers)
+Subroutine initDepth(ground, NLayers)
+   use RoadSurfVariables
    implicit none
 
    integer, intent(IN)::NLayers             !< Number of ground layers
-   real(8), dimension(16), intent(OUT):: ZDpth !< Depths of ground layers
+   type(groundVariables), intent(INOUT) :: ground     !< Variables for ground
+                                                    !< properties
    real(8):: ZAdd
    integer ::I
 
    ZAdd = 0.02
-   ZDpth(1) = 0.0
+   ground%ZDpth(1) = 0.0
    !Calculates layer depths so that the thicknesses increase with depth
 
    Do I = 1, NLayers
-      ZDpth(I + 1) = ZDpth(I) + 0.0103*1.4**(I - 1) + ZAdd
+      ground%ZDpth(I + 1) = ground%ZDpth(I) + 0.0103*1.4**(I - 1) + ZAdd
    End do
 
 End Subroutine
@@ -329,12 +358,14 @@ Subroutine InitParam(Albedo, phy,inputParam)
 End Subroutine
 
 !> Initializes atmoshpere and surface variables
-Subroutine initVariables(ground, atm)
+Subroutine initVariables(ground, atm,settings)
    use RoadSurfVariables
    Implicit none
    type(GroundVariables), intent(INOUT) :: ground !< Varibales for ground properties
    type(AtmVariables), intent(INOUT) :: atm     !< Variables for atmospheric
                                                 !< properties
+   type(ModelSettings), intent(OUT) :: settings         !< Variables for model
+                                                              !< settings
 
    integer :: i
 
@@ -352,7 +383,7 @@ Subroutine initVariables(ground, atm)
    atm%CalmLim = 0.4
    atm%SensibleHeatFlux = -9999.9
    ground%GroundFlux = -9999.9
-   Do I = 1, 16
+   Do I = 1, settings%NLayers
       ground%VSH(i) = -99.9
       ground%HS(i) = -99.9
       ground%CC(i) = -99.9
@@ -425,6 +456,7 @@ subroutine initSettings(inSettings, settings,inputParam,localParam)
    settings%InitLenI = localParam%InitLenI
    settings%DTSecs = inSettings%DTSecs
    settings%tsurfOutputDepth = inSettings%tsurfOutputDepth
+   settings%NLayers=inSettings%NLayers
 
    settings%NightOn = inputParam%NightOn 
    settings%NightOff =  inputParam%NightOff

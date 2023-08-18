@@ -1,4 +1,3 @@
-#include "Constants.h"
 
 !>Runs road weather model simulation
 SUBROUTINE runsimulation(outPointers, inPointers,&
@@ -70,14 +69,14 @@ SUBROUTINE runsimulation(outPointers, inPointers,&
       end if
 
       !set current values to atm%Tair etc
-      call SetCurrentValues(i, ground%Tmp, modelInput, atm, settings, surf, coupling,&
+      call SetCurrentValues(i, modelInput, atm, settings, surf, coupling,&
           ground)
 
       !If relaxation is used
       if (settings%use_relaxation) Then
          !Smooth t2m, rh and wind values when moving from initialization phase
          !to forecasting phase
-         call RelaxationOperations(i, atm, settings,ground%Tmp)
+         call RelaxationOperations(i, atm, settings,ground)
 
       end if
       !Calculate temperature profile and storage values one timestep forward

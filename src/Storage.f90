@@ -312,25 +312,17 @@ End Subroutine
 !----------------------------------------------------------------------------------
 
 !>Calculate melting
-Subroutine melting(HStor, inCouplingPhase, TsurfObsLast, HS, TmpNw,ZDpth,depth,&
+Subroutine melting(inCouplingPhase, TsurfObsLast, ground,depth,&
                   surf,CP)
    use RoadSurfVariables
    Implicit None
-   real(8), intent(IN) :: HStor                        !< Descriptes stored heat to
-                                                    !< the surface from previous
-                                                    !< time step
-
    real(8), intent(IN) :: TsurfObsLast                 !< last surface temperature
                                                     !< observation
    logical, intent(IN) ::inCouplingPhase            !< true if in coupling phase
-   real(8), dimension(16), intent(IN):: HS             !< Heat capacity in intensity units
-                                                    !< (W/m^2K)
    type(SurfaceVariables), intent(INOUT) :: surf    !< Variables for surface
                                                     !< properties
 
-   real(8), dimension(0:16), intent(INOUT):: TmpNw     !< Next time step layer
-                                                    !< temperatures
-   real(8), dimension(16), intent(INOUT):: ZDpth      !< Layer depths
+   type(groundVariables), intent(INOUT) :: ground !< Varibales for ground properties
    real(8) :: depth                                 !< depth to calculate outpu temp
    type(RoadCondParameters), intent(IN) :: CP   !< Parameters to determine
                                                 !< storage terms and road condition
@@ -359,7 +351,7 @@ Subroutine melting(HStor, inCouplingPhase, TsurfObsLast, HS, TmpNw,ZDpth,depth,&
          if (.not. CP%CanMeltingChangeTemperature) Then
             Exit MLT
          end if
-         If ((HStor <= 0.00001) .or. (surf%TSurfAve <= surf%T4Melt) .or. &
+         If ((ground%HStor <= 0.00001) .or. (surf%TSurfAve <= surf%T4Melt) .or. &
             (surf%Q2Melt <=0) .or. &
             (inCouplingPhase .and. TsurfObsLast < surf%T4Melt)) Then
 
@@ -373,24 +365,24 @@ Subroutine melting(HStor, inCouplingPhase, TsurfObsLast, HS, TmpNw,ZDpth,depth,&
                Exit MLT
             end if
          End If 
-         QAvail = HS(1)*(TmpNw(1) - surf%T4Melt) ! Heat available for
+         QAvail = ground%HS(1)*(ground%TmpNw(1) - surf%T4Melt) ! Heat available for
          If (surf%Q2Melt >= QAvail) Then ! All available heat used (partly melts)
             surf%Q2Melt = QAvail ! - temp remains at  temp
-            TmpNw(1) = surf%T4Melt + 0.01 ! - offset to guarantee freezing
-            TmpNw(2) = surf%T4Melt + 0.01
+            ground%TmpNw(1) = surf%T4Melt + 0.01 ! - offset to guarantee freezing
+            ground%TmpNw(2) = surf%T4Melt + 0.01
             
          Else ! Only part used => no change in Q2Melt
             QLeftOver = QAvail - surf%Q2Melt ! - heat left over from ...
-            TmpNw(1) = surf%T4Melt + (QLeftOver/HS(1)) !  ... increases temperature
-            TmpNw(2) = surf%T4Melt + 0.01
+            ground%TmpNw(1) = surf%T4Melt + (QLeftOver/ground%HS(1)) !  ... increases temperature
+            ground%TmpNw(2) = surf%T4Melt + 0.01
          End If
 
          
          if (depth>=0)Then
-            Call getTempAtDepth(TmpNw,ZDpth,depth,t_output)
+            Call getTempAtDepth(ground,depth,t_output)
             surf%TsurfAve=t_output
          else
-            surf%TSurfAve = 0.5*(TmpNw(1) + TmpNw(2))
+            surf%TSurfAve = 0.5*(ground%TmpNw(1) + ground%TmpNw(2))
          end if
          Exit MLT
       End Do MLT

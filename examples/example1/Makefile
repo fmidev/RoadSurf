@@ -41,7 +41,7 @@ OBJFILES = $(FOBJFILES) $(COBJFILES)
 LIBS +=	-lgfortran \
 	-lpthread \
 	-ljsoncpp \
-        -lroadsurf	
+        ../../libroadsurf.so	
 
 all: roadrunner
 debug: roadrunner
