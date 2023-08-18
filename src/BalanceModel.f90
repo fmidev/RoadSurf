@@ -66,7 +66,7 @@ Submodule (RoadSurf) BalanceModel
          end if
       
          !> Calculate the heat needed to melt/freeze the whole uppermost snow/ice layer.
-         call NewMeltFreezeHeat(settings%DTSecs, surf, condParam)
+    !     call NewMeltFreezeHeat(settings%DTSecs, surf, condParam)
          !Check if melting
          call melting(coupling%inCouplingPhase, coupling%lastTsurfObs, &
                       ground, depth,surf, &

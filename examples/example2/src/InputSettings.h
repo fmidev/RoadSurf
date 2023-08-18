@@ -18,6 +18,7 @@ struct InputSettings
 
   double DTSecs = 30.0;                    //!< time step in seconds
   double tsurfOutputDepth = -9999.9;       //!< Depth to interpolate output surface temperature
+  int NLayers=15;
   int coupling_minutes = 180;              //!< Coupling lenght in minutes
   double couplingEffectReduction=4.0*3600; //!< Parameter used to calculate radiation
                                            //!< coefficient after coupling

@@ -61,6 +61,7 @@ submodule (RoadSurf) Cond
          If (surf%SrfWatmms < CP%MinWatmms) surf%SrfWatmms = 0.0 ! Stop from going negative
          If (surf%SrfWatmms > CP%MaxWatmms) surf%SrfWatmms = CP%MaxWatmms ! Overflow
       
+         call NewMeltFreezeHeat(settings%DTSecs, surf, CP)
       End Subroutine
       
       !--------------------------------------------------------------------------------------------------
