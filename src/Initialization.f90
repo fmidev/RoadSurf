@@ -279,7 +279,7 @@ Subroutine initTemp(Tsurf, Tair,depth, phy, settings, ground, modelInput, surf)
       ground%TmpNW(i) = ground%Tmp(i)
    end Do
    if (depth>=0) Then
-      Call getTempAtDepth(ground%Tmp,ground%ZDpth,depth,t_output)
+      Call getTempAtDepth(ground,depth,t_output)
       surf%TsurfAve=t_output
    else
      surf%TsurfAve = 0.5*(ground%Tmp(1) + ground%Tmp(2))
