@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <boost/date_time/posix_time/ptime.hpp>
+#include <macgyver/DateTime.h>
 #include <boost/optional.hpp>
 #include <string>
 
@@ -18,5 +18,5 @@ struct Options
   std::string infile;
   std::string configfile;
   std::string archive;
-  boost::optional<boost::posix_time::ptime> time;
+  boost::optional<Fmi::DateTime> time;
 };

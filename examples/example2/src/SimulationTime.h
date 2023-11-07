@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/date_time/posix_time/ptime.hpp>
+#include <macgyver/DateTime.h>
 #include <smartmet/newbase/NFmiMetTime.h>
 #include <vector>
 
@@ -12,7 +12,7 @@
 
 struct SimulationTime
 {
-  explicit SimulationTime(const boost::posix_time::ptime& pTime) : pt(pTime), t(pTime)
+  explicit SimulationTime(const Fmi::DateTime& pTime) : pt(pTime), t(pTime)
   {
     const auto ymd = pt.date().year_month_day();
     const auto tday = pt.time_of_day();
@@ -25,7 +25,7 @@ struct SimulationTime
     second = tday.seconds();
   }
 
-  boost::posix_time::ptime pt;
+  Fmi::DateTime pt;
   NFmiMetTime t = NFmiMetTime::gMissingTime;
   int year = 0;
   int month = 0;

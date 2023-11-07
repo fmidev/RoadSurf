@@ -118,7 +118,7 @@ SimulationTimes get_times(const InputSettings& pSettings)
 {
   SimulationTimes times;
 
-  const auto dt = boost::posix_time::seconds(static_cast<long>(pSettings.DTSecs));
+  const auto dt = Fmi::Seconds(static_cast<long>(pSettings.DTSecs));
   auto t = pSettings.start_time;
   for (int i = 0; i < pSettings.SimLen; i++)
   {
@@ -225,7 +225,7 @@ boost::optional<InputData> read_input(const NFmiPoint& pLonLat,
       auto lastTairObsTime = pDataManager.GetLatestObsTime(pLonLat, "airtemperature");
       if (lastTairObsTime)
       {
-        boost::posix_time::ptime obstime = *lastTairObsTime;
+        Fmi::DateTime obstime = *lastTairObsTime;
         const auto duration = obstime - pSettings.start_time;
         const auto total_secs = duration.total_seconds();
         lParameters.InitLenI = static_cast<int>(total_secs / pSettings.DTSecs) + 1;

@@ -8,8 +8,8 @@
  */
 // ----------------------------------------------------------------------
 
-boost::posix_time::ptime get_forecast_time(const Json::Value &pJson,
-                                           const boost::optional<boost::posix_time::ptime> &pTime)
+Fmi::DateTime get_forecast_time(const Json::Value &pJson,
+                                           const boost::optional<Fmi::DateTime> &pTime)
 {
   // Command line option overrides config options
   if (pTime)
@@ -20,12 +20,12 @@ boost::posix_time::ptime get_forecast_time(const Json::Value &pJson,
   if (!tmp.isNull())
     return Fmi::TimeParser::parse(tmp.asString());
 
-  auto now = boost::posix_time::second_clock::universal_time();
+  auto now = Fmi::SecondClock::universal_time();
 
   // Round down to to full minutes
 
   auto tday = now.time_of_day();
-  return {now.date(), boost::posix_time::time_duration(tday.hours(), tday.minutes(), 0)};
+  return {now.date(), Fmi::TimeDuration(tday.hours(), tday.minutes(), 0)};
 }
 
 // ----------------------------------------------------------------------
@@ -34,11 +34,11 @@ boost::posix_time::ptime get_forecast_time(const Json::Value &pJson,
  */
 // ----------------------------------------------------------------------
 
-boost::posix_time::ptime get_model_start_time(const boost::posix_time::ptime &pWallClock,
+Fmi::DateTime get_model_start_time(const Fmi::DateTime &pWallClock,
                                               const Json::Value &pJson)
 {
   auto hours = Json::Path(".time.analysis").resolve(pJson, 24).asInt();
-  return pWallClock - boost::posix_time::hours(hours);
+  return pWallClock - Fmi::Hours(hours);
 }
 
 // ----------------------------------------------------------------------
@@ -47,11 +47,11 @@ boost::posix_time::ptime get_model_start_time(const boost::posix_time::ptime &pW
  */
 // ----------------------------------------------------------------------
 
-boost::posix_time::ptime get_model_end_time(const boost::posix_time::ptime &pWallClock,
+Fmi::DateTime get_model_end_time(const Fmi::DateTime &pWallClock,
                                             const Json::Value &pJson)
 {
   auto hours = Json::Path(".time.forecast").resolve(pJson, 48).asInt();
-  return pWallClock + boost::posix_time::hours(hours);
+  return pWallClock + Fmi::Hours(hours);
 }
 
 // ----------------------------------------------------------------------

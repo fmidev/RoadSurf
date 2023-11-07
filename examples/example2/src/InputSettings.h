@@ -1,7 +1,7 @@
 #pragma once
 #include <roadsurf/Constants.h>
 #include "Options.h"
-#include <boost/date_time/posix_time/ptime.hpp>
+#include <macgyver/DateTime.h>
 #include <boost/optional.hpp>
 #include <json/json.h>
 #include <smartmet/newbase/NFmiMetTime.h>
@@ -23,8 +23,8 @@ struct InputSettings
   double couplingEffectReduction=4.0*3600; //!< Parameter used to calculate radiation
                                            //!< coefficient after coupling
   int outputStep = 60;                     //!< frequency of output in minutes
-  boost::posix_time::ptime forecast_time;  //!< Wall clock time, possibly simulated one
-  boost::posix_time::ptime start_time;     //!< Model simulation start time
-  boost::posix_time::ptime end_time;       //!< Model simulation end time
+  Fmi::DateTime forecast_time;  //!< Wall clock time, possibly simulated one
+  Fmi::DateTime start_time;     //!< Model simulation start time
+  Fmi::DateTime end_time;       //!< Model simulation end time
   int use_obs_qc;                           //!< use quality control for observations
 };
