@@ -241,6 +241,10 @@ Subroutine IceStorage(Melted, SrfExtmms, SrfPormms, MaxPormms, &
    If (surf%wearSurf .and. surf%SrfIcemms > 0.) Then ! Wear : also under snow
       !Ice amount is reduced to secondary ice at faster rate
       surf%SrfIcemms = surf%SrfIcemms - wearF%IceWear 
+   End If
+
+   If (surf%wearSurf .and. surf%SrfIce2mms > 0.) Then ! Wear : also under snow
+      !Ice amount is reduced to secondary ice at faster rate
       surf%SrfIce2mms = surf%SrfIce2mms - wearF%IceWear2 
 
    End If
