@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 1.1
+Version: 1.2
 Release: 1%{?dist}.fmi
 License: GPL
 Group: Development/Tools
@@ -53,6 +53,9 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
+* Wed Nov 15 2023 Virve Karsisto <tierut@dev.road.fmi.fi>
+- Bug fix to secondary ice storage wear
+
 * Wed Sep 20 2023 Mika Heiskanen <mheiskan@rhel8.dev.fmi.fi> - 1.1-1.fmi
 - Number of ground layers can now be changed from configuration file
 - Fixed error in getTempAtDepth arguments
