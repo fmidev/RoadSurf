@@ -548,7 +548,7 @@ void RoadSurfSource::Impl::GetWeather(InputData& pData,
 
     unsigned int pos;
     for (pos = 0; pos < obs.size(); ++pos)
-      if (obs[pos].date >= pt)
+      if (obs[pos].date >= NFmiTime(pt))
         break;
     const int max_time_gap = 180;
 

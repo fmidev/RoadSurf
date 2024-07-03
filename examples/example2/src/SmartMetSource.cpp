@@ -819,7 +819,7 @@ void SmartMetSource::Impl::SpikeCheck(Observations& pObs,double spikeSize,std::s
 void SmartMetSource::Impl::RemoveOutliers()
 {
      std::size_t minSize=50; //minimum datapoin limit
-     const auto dt = boost::posix_time::seconds(10*60);
+     const auto dt = Fmi::Seconds(10*60);
      auto t = mStartTime.PosixTime();
      auto endTime=mWallClock.PosixTime();
      auto tNext=t+dt;
@@ -916,7 +916,7 @@ void SmartMetSource::Impl::GetWeather(InputData& pData,
 
     unsigned int pos;
     for (pos = 0; pos < obs.size(); ++pos)
-      if (obs[pos].date >= pt)
+      if (obs[pos].date >= NFmiTime(pt))
         break;
 
     const int max_time_gap = 180;

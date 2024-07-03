@@ -312,7 +312,7 @@ void AsciiSource::Impl::GetWeather(InputData& pData,
 
     unsigned int pos;
     for (pos = 0; pos < mData.size(); ++pos)
-      if (mData[pos].date >= pt)
+      if (mData[pos].date >= NFmiTime(pt))
         break;
 
     Weather data{pt};
