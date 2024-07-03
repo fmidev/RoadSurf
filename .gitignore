@@ -1,0 +1,7 @@
+*.o
+*.d
+/obj/*.mod
+/obj/*.smod
+libroadsurf.so
+/examples/example1/roadrunner
+/examples/example2/roadrunner
