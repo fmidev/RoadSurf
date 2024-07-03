@@ -3,7 +3,7 @@
 #include "DataSource.h"
 #include "InputData.h"
 #include "Weather.h"
-#include <boost/optional.hpp>
+#include <optional>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <json/json.h>
 #include <smartmet/newbase/NFmiMetTime.h>
@@ -28,7 +28,7 @@ class DataManager
 
   void GetWeather(InputData& pData, const SimulationTimes& pTimes, const NFmiPoint& pLatLon) const;
   double MaxShortWaveRadiation(const NFmiPoint& pLatLon) const;
-  boost::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
+  std::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
                                                 const std::string& variable) const;
 
  private:

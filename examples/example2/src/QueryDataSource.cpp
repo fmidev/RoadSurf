@@ -36,7 +36,7 @@ class QueryDataSource::Impl
 
   void GetWeather(InputData& pData, const SimulationTimes& pTimes, const NFmiPoint& pLatLon) const;
 
-  boost::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
+  std::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
                                                 const std::string& variable) const;
 
  private:
@@ -902,7 +902,7 @@ void QueryDataSource::Impl::GetWeather(InputData& pData,
  */
 // ----------------------------------------------------------------------
 
-boost::optional<NFmiMetTime> QueryDataSource::Impl::GetLatestObsTime(
+std::optional<NFmiMetTime> QueryDataSource::Impl::GetLatestObsTime(
     const NFmiPoint& pLatLon, const std::string& variable) const
 {
   // Check against missing data
@@ -920,7 +920,7 @@ boost::optional<NFmiMetTime> QueryDataSource::Impl::GetLatestObsTime(
 
   q.Param(parameterName);  // check_params guarantees success
 
-  boost::optional<NFmiMetTime> ret;
+  std::optional<NFmiMetTime> ret;
 
   for (long time_index = mFirstTimeIndex; time_index <= mLastTimeIndex; ++time_index)
   {
@@ -966,7 +966,7 @@ void QueryDataSource::GetWeather(InputData& pData,
  */
 // ----------------------------------------------------------------------
 
-boost::optional<NFmiMetTime> QueryDataSource::GetLatestObsTime(const NFmiPoint& pLatLon,
+std::optional<NFmiMetTime> QueryDataSource::GetLatestObsTime(const NFmiPoint& pLatLon,
                                                                const std::string& variable) const
 {
   return impl->GetLatestObsTime(pLatLon, variable);

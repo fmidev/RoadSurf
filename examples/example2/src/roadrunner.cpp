@@ -136,7 +136,7 @@ SimulationTimes get_times(const InputSettings& pSettings)
  */
 // ----------------------------------------------------------------------
 
-boost::optional<InputData> read_input(const NFmiPoint& pLonLat,
+std::optional<InputData> read_input(const NFmiPoint& pLonLat,
                                       const SimulationTimes& pTimes,
                                       InputSettings& pSettings,
                                       const DataManager& pDataManager,

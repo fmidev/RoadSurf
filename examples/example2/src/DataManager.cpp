@@ -82,10 +82,10 @@ void DataManager::GetWeather(InputData& pData,
  */
 // ----------------------------------------------------------------------
 
-boost::optional<NFmiMetTime> DataManager::GetLatestObsTime(const NFmiPoint& pLatLon,
+std::optional<NFmiMetTime> DataManager::GetLatestObsTime(const NFmiPoint& pLatLon,
                                                            const std::string& variable) const
 {
-  boost::optional<NFmiMetTime> max_time;
+  std::optional<NFmiMetTime> max_time;
 
   for (const auto& source : mDataSources)
   {
