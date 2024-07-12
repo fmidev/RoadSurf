@@ -23,7 +23,7 @@ class AsciiSource::Impl
 
   void GetWeather(InputData& pData, const SimulationTimes& pTimes, const NFmiPoint& pLatLon) const;
 
-  boost::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
+  std::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
                                                 const std::string& variable) const;
 
  private:
@@ -361,7 +361,7 @@ void AsciiSource::Impl::GetWeather(InputData& pData,
  */
 // ----------------------------------------------------------------------
 
-boost::optional<NFmiMetTime> AsciiSource::Impl::GetLatestObsTime(const NFmiPoint& pLatLon,
+std::optional<NFmiMetTime> AsciiSource::Impl::GetLatestObsTime(const NFmiPoint& pLatLon,
                                                                  const std::string& variable) const
 {
   if (is_missing(pLatLon.X()) || is_missing(pLatLon.Y()))
@@ -429,7 +429,7 @@ void AsciiSource::GetWeather(InputData& pData,
  */
 // ----------------------------------------------------------------------
 
-boost::optional<NFmiMetTime> AsciiSource::GetLatestObsTime(const NFmiPoint& pLatLon,
+std::optional<NFmiMetTime> AsciiSource::GetLatestObsTime(const NFmiPoint& pLatLon,
                                                            const std::string& variable) const
 {
   return impl->GetLatestObsTime(pLatLon, variable);

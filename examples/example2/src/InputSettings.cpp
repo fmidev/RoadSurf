@@ -9,7 +9,7 @@
 // ----------------------------------------------------------------------
 
 Fmi::DateTime get_forecast_time(const Json::Value &pJson,
-                                           const boost::optional<Fmi::DateTime> &pTime)
+                                           const std::optional<Fmi::DateTime> &pTime)
 {
   // Command line option overrides config options
   if (pTime)

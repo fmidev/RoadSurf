@@ -29,7 +29,7 @@ class AsciiSource : public DataSource
                   const SimulationTimes& pTimes,
                   const NFmiPoint& pLatLon) const final;
 
-  boost::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
+  std::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
                                                 const std::string& variable) const final;
 
  private:

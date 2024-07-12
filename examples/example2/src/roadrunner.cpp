@@ -48,7 +48,7 @@ MutexType read_mutex;
 }
 using namespace boost::archive;
 using namespace boost::posix_time;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 // Parsed command line options
 Options options;
 
@@ -95,7 +95,7 @@ bool parse_options(int argc, char* argv[])
   if (options.configfile.empty())
     throw std::runtime_error("Configuration file not given");
 
-  if (!boost::filesystem::exists(options.configfile))
+  if (!std::filesystem::exists(options.configfile))
     throw std::runtime_error("Configuration file '" + options.configfile + "' missing");
 
   // Plain -j means use all cores
@@ -136,7 +136,7 @@ SimulationTimes get_times(const InputSettings& pSettings)
  */
 // ----------------------------------------------------------------------
 
-boost::optional<InputData> read_input(const NFmiPoint& pLonLat,
+std::optional<InputData> read_input(const NFmiPoint& pLonLat,
                                       const SimulationTimes& pTimes,
                                       InputSettings& pSettings,
                                       const DataManager& pDataManager,

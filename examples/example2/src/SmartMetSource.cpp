@@ -24,7 +24,7 @@ using Observations = std::vector<Weather>;    // observations sorted by time
 using DataMap = std::map<int, Observations>;  // observations for each station
 
 // Last searched location and the data for it is cached for speed
-thread_local boost::optional<NFmiPoint> myLatLon;
+thread_local std::optional<NFmiPoint> myLatLon;
 thread_local DataMap::const_iterator myData;
 
 std::string format_smartmet_time(NFmiMetTime pTime, int pTimeMargin)
@@ -55,7 +55,7 @@ class SmartMetSource::Impl
 
   void GetWeather(InputData& pData, const SimulationTimes& pTimes, const NFmiPoint& pLatLon);
 
-  boost::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
+  std::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
                                                 const std::string& p) const;
 
  private:
@@ -79,7 +79,7 @@ class SmartMetSource::Impl
   std::string mProtocol;
   std::string mHost;
   std::string mPlugin;
-  boost::optional<std::string> mKeyword;
+  std::optional<std::string> mKeyword;
   std::string mFmisid;
   std::string mProducer = "road";
 
@@ -986,7 +986,7 @@ void SmartMetSource::Impl::GetWeather(InputData& pData,
  */
 // ----------------------------------------------------------------------
 
-boost::optional<NFmiMetTime> SmartMetSource::Impl::GetLatestObsTime(const NFmiPoint& pLatLon,
+std::optional<NFmiMetTime> SmartMetSource::Impl::GetLatestObsTime(const NFmiPoint& pLatLon,
                                                                     const std::string& p) const
 {
   double Weather::*ptr = nullptr;
@@ -1073,7 +1073,7 @@ void SmartMetSource::GetWeather(InputData& pData,
  */
 // ----------------------------------------------------------------------
 
-boost::optional<NFmiMetTime> SmartMetSource::GetLatestObsTime(const NFmiPoint& pLatLon,
+std::optional<NFmiMetTime> SmartMetSource::GetLatestObsTime(const NFmiPoint& pLatLon,
                                                               const std::string& variable) const
 {
   return impl->GetLatestObsTime(pLatLon, variable);

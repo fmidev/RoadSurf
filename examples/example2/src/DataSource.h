@@ -3,7 +3,7 @@
 #include "InputData.h"
 #include "SimulationTime.h"
 #include "Weather.h"
-#include <boost/optional.hpp>
+#include <optional>
 #include <json/json.h>
 
 class NFmiPoint;
@@ -25,7 +25,7 @@ class DataSource
                           const SimulationTimes& pTimes,
                           const NFmiPoint& pLatLon) const = 0;
 
-  virtual boost::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
+  virtual std::optional<NFmiMetTime> GetLatestObsTime(const NFmiPoint& pLatLon,
                                                         const std::string& variable) const = 0;
   bool is_observation = false;
 

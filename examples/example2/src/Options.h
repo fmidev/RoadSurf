@@ -7,7 +7,7 @@
 #pragma once
 
 #include <macgyver/DateTime.h>
-#include <boost/optional.hpp>
+#include <optional>
 #include <string>
 
 struct Options
@@ -18,5 +18,5 @@ struct Options
   std::string infile;
   std::string configfile;
   std::string archive;
-  boost::optional<Fmi::DateTime> time;
+  std::optional<Fmi::DateTime> time;
 };
