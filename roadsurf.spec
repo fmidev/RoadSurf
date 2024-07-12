@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 1.2
+Version: 1.3
 Release: 1%{?dist}.fmi
 License: GPL
 Group: Development/Tools
@@ -53,6 +53,9 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
+* Fri Jul 12 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 1.3-1.fmi
+- Replace many boost library types with C++ standard library ones
+
 * Wed Nov 15 2023 Virve Karsisto <tierut@dev.road.fmi.fi>
 - Bug fix to secondary ice storage wear
 
