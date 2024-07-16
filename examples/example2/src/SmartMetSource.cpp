@@ -115,7 +115,7 @@ class SmartMetSource::Impl
   bool uses_param(const std::string& pParam) const;
   void SameValueCheck(Observations& pObs,int sameLimit);
   void RemoveTooManySameValues( Observations& pObs,int sameLimit, double Weather::*pPtr);
-  void RemoveSpikes(Observations& pObs,double spikeSize, std::size_t maxSpikeDuration, 
+  void RemoveSpikes(Observations& pObs,double spikeSize, std::size_t maxSpikeDuration,
 		double Weather::*pPtr);
   void RemoveOutliers();
   void SpikeCheck(Observations& pObs,double spikeSize,std::size_t maxSpikeDuration);
@@ -401,7 +401,7 @@ void SmartMetSource::Impl::read_data(const cpr::Url& pUrl, const cpr::Parameters
         SameValueCheck(obs,maxSameTolerance);
         SpikeCheck(obs,spikeSize,maxSpikeDuration);
         MaxMinCheck(obs);
- 	it->second=obs;	
+ 	it->second=obs;
      }
   }
 //Outlier check needs further studies
@@ -717,7 +717,7 @@ double SmartMetSource::Impl::interpolate(const Observations& pObservations,
   return value;
 }
 //Got Help from ChatGPT
-void SmartMetSource::Impl::RemoveTooManySameValues(Observations& pObs,int sameLimit, double Weather::*pPtr){    
+void SmartMetSource::Impl::RemoveTooManySameValues(Observations& pObs,int sameLimit, double Weather::*pPtr){
    int count=1;
    double previous= pObs[0].*pPtr;
    for (std::size_t i = 1; i < pObs.size(); ++i) {
@@ -782,7 +782,7 @@ void SmartMetSource::Impl::MaxMinCheck(Observations& pObs){
 	 }
     }
 }
-void SmartMetSource::Impl::RemoveSpikes(Observations& pObs,double spikeSize, std::size_t maxSpikeDuration, 
+void SmartMetSource::Impl::RemoveSpikes(Observations& pObs,double spikeSize, std::size_t maxSpikeDuration,
 		double Weather::*pPtr){
    double previous= pObs[0].*pPtr;
    for (std::size_t i = 1; i < pObs.size(); i++) {
@@ -858,7 +858,7 @@ void SmartMetSource::Impl::RemoveOutliers()
 	}
         t+=dt;
 	tNext+=dt;
-	
+
      }
 
 }
@@ -898,7 +898,7 @@ void SmartMetSource::Impl::GetWeather(InputData& pData,
   if (obs.empty())
     return;
 
-  
+
   // Process all times
   for (std::size_t i = 0; i < pTimes.size(); i++)
   {
@@ -916,7 +916,7 @@ void SmartMetSource::Impl::GetWeather(InputData& pData,
 
     unsigned int pos;
     for (pos = 0; pos < obs.size(); ++pos)
-      if (obs[pos].date >= NFmiTime(pt))
+      if (obs[pos].date.PosixTime() >= pt)
         break;
 
     const int max_time_gap = 180;
