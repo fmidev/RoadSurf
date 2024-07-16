@@ -860,7 +860,7 @@ void QueryDataSource::Impl::GetWeather(InputData& pData,
     }
 
     // clamp rh to 0-100
-    if (!isnan(data.rh2m))
+    if (!std::isnan(data.rh2m))
       data.rh2m = std::max(0.0, std::min(100.0, data.rh2m));
 
     // sanity check on precipitation amount
