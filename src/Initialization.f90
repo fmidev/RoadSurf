@@ -402,12 +402,12 @@ Subroutine initOutputArrays(SimLen, modelOutput)
 
    integer ::i
    Do i = 1, SimLen
-      modelOutput%SnowOut(i) = -99.9
-      modelOutput%WaterOut(i) = -99.9
-      modelOutput%IceOut(i) = -99.9
-      modelOutput%Ice2Out(i) = -99.9
-      modelOutput%DepositOut(i) = -99.9
-      modelOutput%TsurfOut(i) = -99.9
+      modelOutput%SnowOut(i) = -9999.0
+      modelOutput%WaterOut(i) = -9999.0
+      modelOutput%IceOut(i) = -9999.0
+      modelOutput%Ice2Out(i) = -9999.0
+      modelOutput%DepositOut(i) = -9999.0
+      modelOutput%TsurfOut(i) = -9999.0
    end do
 end Subroutine
 
