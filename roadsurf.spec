@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 1.3
+Version: 1.3.1
 Release: 1%{?dist}.fmi
 License: GPL
 Group: Development/Tools
@@ -53,6 +53,9 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
+* Mon Aug 19 2024 Andris Pavenis <andris.pavenis@fmi.fi> 1.3.1-1.fmi
+- Changed output array initialization from -99 to -9999 (update from Virve Karsisto <virve.karsisto@fmi.fi>)
+
 * Fri Jul 12 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 1.3-1.fmi
 - Replace many boost library types with C++ standard library ones
 
