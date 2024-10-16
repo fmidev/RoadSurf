@@ -89,6 +89,14 @@ $(objdir)/SunPosition.o: $(objdir)/RoadSurf.o
 objdir:
 	@mkdir -p $(objdir)
 
+examples: example1 example2
+
+example1: all
+	$(MAKE) -C examples/example1
+
+example2: all
+	$(MAKE) -C examples/example2
+
 rpm : clean roadsurf.spec
 	rm -f roadsurf.tar.gz # Clean a possible leftover from previous attempt
 	tar -czvf roadsurf.tar.gz --exclude test --exclude examples --exclude-vcs --transform "s,^,roadsurf/," *
@@ -97,6 +105,8 @@ rpm : clean roadsurf.spec
 
 clean:
 	rm -rf $(LIBFILE) $(objdir)
+	$(MAKE) -C examples/example1 clean
+	$(MAKE) -C examples/example2 clean
 
 install:
 	mkdir -p $(libdir)
