@@ -277,7 +277,7 @@ Subroutine snowIceCheck(LastTsurfObs, surf, CP)
    end if
    if (LastTsurfObs > CP%TLimMeltIce .and. surf%SrfIce2mms > 0.00) Then
       !Force ice melting
-      surf%SrfWatmms = surf%SrfWatmms + surf%Srfice2mms
+      !surf%SrfWatmms = surf%SrfWatmms + surf%Srfice2mms
       surf%SrfIce2mms = 0.00
    end if
    if (LastTsurfObs > CP%TLimMeltDep .and. surf%SrfDepmms > 0.00) Then
