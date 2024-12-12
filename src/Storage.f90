@@ -366,6 +366,8 @@ Subroutine melting(inCouplingPhase, TsurfObsLast, ground,depth,&
                Exit MLT ! => exit with no
             ! No change in temerpature if it is high, would drop too much
             else if  (surf%TSurfAve>2.0) Then
+               QAvail = ground%HS(1)*(ground%TmpNw(1) - surf%T4Melt) ! Heat available for
+               surf%Q2Melt = QAvail !
                Exit MLT
             end if
          End If 
