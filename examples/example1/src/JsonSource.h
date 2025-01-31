@@ -11,7 +11,7 @@
 class JsonSource : public GenericSource
 {
  public:
-  ~JsonSource() override = default;  //Destructor
+  ~JsonSource() override;  //Destructor
 
   JsonSource() = delete;
   JsonSource(const JsonSource& pOther) = delete;

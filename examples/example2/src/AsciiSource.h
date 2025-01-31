@@ -12,7 +12,7 @@
 class AsciiSource : public DataSource
 {
  public:
-  ~AsciiSource() override = default;
+  ~AsciiSource() override;
 
   AsciiSource() = delete;
   AsciiSource(const AsciiSource& pOther) = delete;
@@ -34,5 +34,5 @@ class AsciiSource : public DataSource
 
  private:
   class Impl;
-  std::shared_ptr<Impl> impl;
+  std::unique_ptr<Impl> impl;
 };

@@ -8,7 +8,7 @@
 class SmartMetSource : public DataSource
 {
  public:
-  ~SmartMetSource() override = default;
+  ~SmartMetSource() override;
 
   SmartMetSource() = delete;
   SmartMetSource(const SmartMetSource& pOther) = delete;
@@ -31,5 +31,5 @@ class SmartMetSource : public DataSource
 
  private:
   class Impl;
-  std::shared_ptr<Impl> impl;
+  std::unique_ptr<Impl> impl;
 };

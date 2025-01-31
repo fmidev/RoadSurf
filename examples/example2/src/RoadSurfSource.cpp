@@ -76,6 +76,8 @@ class RoadSurfSource::Impl
 
 };  // class AsciiSource::Impl
 
+RoadSurfSource::~RoadSurfSource() = default;
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Read data from a file

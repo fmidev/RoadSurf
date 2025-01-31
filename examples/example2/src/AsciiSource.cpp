@@ -48,6 +48,8 @@ class AsciiSource::Impl
 
 };  // class AsciiSource::Impl
 
+AsciiSource::~AsciiSource() = default;
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Read data from a file

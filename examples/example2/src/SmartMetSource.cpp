@@ -122,6 +122,8 @@ class SmartMetSource::Impl
   void MaxMinCheck(Observations& pObs);
 };  // class SmartMetSource::Impl
 
+SmartMetSource::~SmartMetSource() = default;
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Read observations for a keyword from the server

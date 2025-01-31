@@ -127,6 +127,10 @@ class QueryDataSource::Impl
   std::string precConversion;
   int time_shift = 0;  // minutes, used to shift time stamp
 };                     // class QueryDataSource::Impl
+
+
+QueryDataSource::~QueryDataSource() = default;
+
 ///-----------------------------------------------------------------------
 /*!
  * return kfmiparameter of the corresponding varaible

@@ -8,7 +8,7 @@
 class RoadSurfSource : public DataSource
 {
  public:
-  ~RoadSurfSource() override = default;
+  ~RoadSurfSource() override;
 
   RoadSurfSource() = delete;
   RoadSurfSource(const RoadSurfSource& pOther) = delete;
@@ -31,5 +31,5 @@ class RoadSurfSource : public DataSource
 
  private:
   class Impl;
-  std::shared_ptr<Impl> impl;
+  std::unique_ptr<Impl> impl;
 };

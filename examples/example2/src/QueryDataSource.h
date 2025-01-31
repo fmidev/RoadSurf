@@ -9,7 +9,7 @@
 class QueryDataSource : public DataSource
 {
  public:
-  ~QueryDataSource() override = default;
+  ~QueryDataSource() override;
 
   QueryDataSource() = delete;
   QueryDataSource(const QueryDataSource& pOther) = delete;
@@ -31,5 +31,5 @@ class QueryDataSource : public DataSource
 
  private:
   class Impl;
-  std::shared_ptr<Impl> impl;
+  std::unique_ptr<Impl> impl;
 };

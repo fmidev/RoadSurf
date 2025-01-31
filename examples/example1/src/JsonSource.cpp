@@ -38,6 +38,9 @@ class JsonSource::Impl
                  std::vector<time_t> rawtime,
                  std::vector<time_t> simtime);
 };
+
+JsonSource::~JsonSource() = default;
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Interpolates raw data for each time step in simulation
