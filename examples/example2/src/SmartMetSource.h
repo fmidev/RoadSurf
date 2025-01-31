@@ -31,5 +31,5 @@ class SmartMetSource : public DataSource
 
  private:
   class Impl;
-  std::unique_ptr<Impl> impl;
+  std::shared_ptr<Impl> impl;
 };
