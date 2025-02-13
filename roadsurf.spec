@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 1.3.1
+Version: 1.4.1
 Release: 1%{?dist}.fmi
 License: GPL
 Group: Development/Tools
@@ -53,6 +53,10 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
+* Tue Feb 11 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 1.4.1-1.fmi
+- bug fix to prevent water storage increasing by double
+- Bug fix to prevent melting huge amounts at once
+
 * Mon Aug 19 2024 Andris Pavenis <andris.pavenis@fmi.fi> 1.3.1-1.fmi
 - Changed output array initialization from -99 to -9999 (update from Virve Karsisto <virve.karsisto@fmi.fi>)
 
