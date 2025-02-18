@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 1.4.1
+Version: 25.2.18
 Release: 1%{?dist}.fmi
 License: GPL
 Group: Development/Tools
@@ -53,6 +53,9 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
+* Tue Feb 18 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.2.18-1.fmi
+- Update to gdal-3.10, geos-3.13 and proj-9.5
+
 * Tue Feb 11 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 1.4.1-1.fmi
 - bug fix to prevent water storage increasing by double
 - Bug fix to prevent melting huge amounts at once
