@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 25.7.3
+Version: 1.5.1
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Tools
