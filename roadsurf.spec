@@ -3,7 +3,7 @@ Summary: Road surface weather model
 Name: %{NAME}
 Version: 25.7.3
 Release: 1%{?dist}.fmi
-License: GPL
+License: MIT
 Group: Development/Tools
 URL: https://github.com/fmidev/RoadSurf
 Source0: %{name}.tar.gz
