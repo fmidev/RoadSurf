@@ -113,7 +113,7 @@ Submodule (RoadSurf) ValueControl
       
          !call CalcTDew(REAL(atm%Tair, 8), atm%TDew, REAL(atm%Rhz, 8))
          !If in initialization phase, set surface temperature to observed value
-         if (i <= settings%InitLenI) Then
+         if (i <= settings%InitLenI .or. settings%force_tsurf) Then
             !if not in coupling phase
             if (modelInput%TsurfOBS(i) > -100.0) Then
       

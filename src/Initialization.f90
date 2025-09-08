@@ -471,6 +471,7 @@ subroutine initSettings(inSettings, settings,inputParam,localParam)
    settings%coupling_minutes=inSettings%coupling_minutes
    settings%couplingEffectReduction=inSettings%couplingEffectReduction
    settings%outputStep=inSettings%outputStep
+   settings%force_tsurf=int2Logical(inSettings%force_tsurf)
  
 end subroutine initSettings
 

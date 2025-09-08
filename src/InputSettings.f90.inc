@@ -5,6 +5,8 @@ Type, Bind(C) :: InputSettings
       INTEGER(C_INT) :: SimLen                  !< Lenght of simulation
       INTEGER(C_INT) :: use_coupling            !< 1 if coupling is used
       INTEGER(C_INT) :: use_relaxation          !< 1 if relaxation is used
+      INTEGER(C_INT) :: force_tsurf              !< 1 if surface temperautre is forced
+                                                !< to given value full simulation
       REAL(C_DOUBLE) :: DTSecs                  !< time step in seconds
       REAL(C_DOUBLE) :: tsurfOutputDepth        !< depth to interpolate surface temperature (m)
       INTEGER(C_INT) :: NLayers                 !< Number of ground layers
