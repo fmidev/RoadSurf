@@ -7,7 +7,8 @@ type ModelSettings
       integer:: SimLen                      !< Lenght of simulation
       logical :: use_coupling               !< coupling is used
       logical :: use_relaxation             !< true if relaxation is used
-                                                
+      logical :: force_tsurf                 !< true if tsurf forced to given
+                                            !< value for full simulation                                                
       integer:: NLayers                     !< number of ground layers
       real(8):: DTSecs                        !< time step in seconds
       real(8) :: tsurfOutputDepth              !< depth to interpolate output surface temperature
