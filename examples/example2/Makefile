@@ -57,7 +57,6 @@ LIBS +=	-L$(libdir) \
 	-lboost_iostreams \
 	-lboost_thread \
 	-lboost_timer \
-	-lboost_system \
 	$(REQUIRED_LIBS) \
 	-lgfortran -lm -lgomp \
 	-lpthread \
