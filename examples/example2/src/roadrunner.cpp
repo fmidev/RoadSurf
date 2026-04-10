@@ -229,6 +229,8 @@ std::optional<InputData> read_input(const NFmiPoint& pLonLat,
         const auto duration = obstime - pSettings.start_time;
         const auto total_secs = duration.total_seconds();
         lParameters.InitLenI = static_cast<int>(total_secs / pSettings.DTSecs) + 1;
+        if (lParameters.InitLenI >= pSettings.SimLen)
+          lParameters.InitLenI = pSettings.SimLen - 1;
         lParameters.tair_relax = data.tair[lParameters.InitLenI];
         lParameters.VZ_relax = data.VZ[lParameters.InitLenI];
         lParameters.RH_relax = data.Rhz[lParameters.InitLenI];

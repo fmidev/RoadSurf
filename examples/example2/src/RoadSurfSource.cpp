@@ -591,7 +591,8 @@ void RoadSurfSource::Impl::GetWeather(InputData& pData,
     if (data.simuprec > 100)
       data.simuprec = MISSING;
 
-    // TODO: tdew????
+    if (!is_missing(data.tdew2m))
+      pData.tdew[i] = data.tdew2m;
 
     if (!is_missing(data.troad))
       pData.TSurfObs[i] = data.troad;
