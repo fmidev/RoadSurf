@@ -83,7 +83,7 @@ InputSettings::InputSettings(const Json::Value &pJson, const Options &pOptions)
     override(&use_obs_qc, json, "use_obs_qc");
   }
   const auto json2 = pJson.get("output", nulljson);
-  if (!json.isNull())
+  if (!json2.isNull())
   {
     override(&outputStep, json2, "step");
   }
