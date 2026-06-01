@@ -32,3 +32,5 @@ You may contact us from following channels:
 The physics of the library have been presented in the following publication:
 
 Karsisto, V. E. 2024: RoadSurf 1.1: open-source road weather model library, Geosci. Model Dev., 17, 4837–4853, https://doi.org/10.5194/gmd-17-4837-2024 
+
+Python version of the model is available at: https://github.com/fmidev/RoadSurf-Python
