@@ -12,4 +12,15 @@ Type, Bind(C) :: LocalParameters
       REAL(C_DOUBLE) :: sky_view        !< Sky view factor
       INTEGER(C_INT) :: InitLenI        !< The length of initialization
                                         !< period, input timesteps
+      INTEGER(C_INT) :: nCouplingObs    !< Number of surface temperature
+                                        !< observations to couple to. Zero means
+                                        !< couplingIndexI/couplingTsurf is used,
+                                        !< i.e. coupling is done only once, for
+                                        !< the latest observation.
+      INTEGER(C_INT), dimension(48) :: couplingIndices !< Indices in input data of
+                                        !< the observations to couple to, in
+                                        !< ascending order. Array size must match
+                                        !< MAXCOUPLINGOBS in Constants.h
+      REAL(C_DOUBLE), dimension(48) :: couplingTsurfs !< Observed surface
+                                        !< temperatures matching couplingIndices
 end type LocalParameters

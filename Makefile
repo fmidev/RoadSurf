@@ -73,6 +73,10 @@ $(LIBFILE): $(OBJS:%.o=$(objdir)/%.o) | objdir
 $(objdir)/%.o: %.f90
 	$(FC) $(FLAGS) -c $< -o $@
 
+# The derived types are textually included with Fortran INCLUDE statements,
+# which the compiler generated dependencies do not cover
+$(objdir)/RoadSurfVariables.o: $(wildcard src/*.f90.inc)
+
 $(objdir)/RoadSurf.o: $(objdir)/RoadSurfVariables.o
 $(objdir)/BalanceModel.o: $(objdir)/RoadSurf.o
 $(objdir)/BoundaryLayer.o: $(objdir)/RoadSurf.o

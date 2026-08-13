@@ -14,6 +14,8 @@ Subroutine setInputParam(localParam, atm, coupling, settings)
                                                     !< properties
    type(CouplingVariables), intent(OUT) :: coupling !< variables used in coupling
 
+   integer :: obsN                                  !< index of coupling observation
+
    coupling%NObs = -99
 
    atm%TairR = real(localParam%tair_relax, 4)
@@ -27,13 +29,39 @@ Subroutine setInputParam(localParam, atm, coupling, settings)
     
    !initialize coupling obs arrays
    call initTsurfObsArrays(coupling)
-   coupling%obsI(1) = localParam%couplingIndexI
-   coupling%obsTsurf(1) = localParam%couplingTsurf
-   coupling%lastTsurfObs = localParam%couplingTsurf
-   coupling%NObs = 1
-   if (localParam%couplingTsurf < -100 .or. coupling%obsI(1)<1) then
+
+   !The caller may give several surface temperature observations spread over the
+   !initialization period, in which case radiation is adjusted separately for
+   !each of them (one coupling phase per observation). Otherwise coupling is
+   !done only once, for the latest observation.
+   coupling%NObs = 0
+   if (localParam%nCouplingObs > 0) Then
+      Do obsN = 1, min(localParam%nCouplingObs, 48)
+         if (localParam%couplingTsurfs(obsN) < -100 .or. &
+             localParam%couplingIndices(obsN) < 1) cycle
+         !Observations must be in ascending order, coupling phases are handled
+         !in the order they are given
+         if (coupling%NObs > 0) Then
+            if (localParam%couplingIndices(obsN) <= coupling%obsI(coupling%NObs)) cycle
+         end if
+         coupling%NObs = coupling%NObs + 1
+         coupling%obsI(coupling%NObs) = localParam%couplingIndices(obsN)
+         coupling%obsTsurf(coupling%NObs) = localParam%couplingTsurfs(obsN)
+      end Do
+   else if (localParam%couplingTsurf > -100 .and. localParam%couplingIndexI >= 1) Then
+      coupling%NObs = 1
+      coupling%obsI(1) = localParam%couplingIndexI
+      coupling%obsTsurf(1) = localParam%couplingTsurf
+   end if
+
+   if (coupling%NObs < 1) Then
+      !No usable observation, coupling cannot be done
+      coupling%NObs = 1
+      coupling%obsI(1) = localParam%couplingIndexI
+      coupling%obsTsurf(1) = localParam%couplingTsurf
       settings%use_coupling = .false.
    end if
+   coupling%lastTsurfObs = coupling%obsTsurf(1)
 
 
 End Subroutine setInputParam

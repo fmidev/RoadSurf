@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 1.6.1
+Version: 1.7.1
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -53,6 +53,14 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
+* Thu Aug 13 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 1.7.1-1.fmi
+- Discard the coupling result when the radiation coefficient exceeds the allowed
+  maximum, and rerun the coupling period without radiation correction so that the
+  surface temperature excursion of the discarded iteration is not left in the output
+- Radiation can be adjusted separately for several surface temperature observations
+  (LocalParameters%nCouplingObs), a failed coupling phase no longer disables coupling
+  for the rest of the simulation
+
 * Wed Sep 17 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 1.6.1-1.fmi
 - Added forcing with fixed observations
 

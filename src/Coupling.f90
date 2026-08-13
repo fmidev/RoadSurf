@@ -37,6 +37,16 @@ Submodule (RoadSurf) Coupling
          DTs = settings%DTSecs
       
          coupling%inCouplingPhase = .false.
+
+         !When several observations are coupled to, a failed coupling phase must
+         !not disable coupling for the rest of the simulation. Once the failed
+         !phase has been passed, continue with the next observation.
+         if (coupling%NObs > 1 .and. coupling%Coupling_failed .and. &
+             coupling%CoupPhaseN < coupling%NObs .and. &
+             i > coupling%couplingEndI(coupling%CoupPhaseN)) Then
+            call startNextCouplingPhase(coupling)
+         end if
+
          !Determine if simulation in coupling phase
          if (i >= coupling%couplingStartI(coupling%CoupPhaseN) .and. &
              i <= coupling%couplingEndI(coupling%CoupPhaseN)) Then
@@ -168,6 +178,37 @@ Subroutine initCoupling(coupling)
 
 End Subroutine initCoupling
 
+!>Reset coupling iteration state and move on to the next coupling phase.
+!>Used when a coupling phase has failed: the radiation correction of the failed
+!>phase is discarded, but the following observations are still coupled to.
+Subroutine startNextCouplingPhase(coupling)
+   use RoadSurfVariables
+   Implicit None
+
+   type(CouplingVariables), intent(INOUT) :: coupling !< variables used in
+                                                      !< coupling(adjusting
+                                                      !< radiation to fit
+                                                      !< observed surface temperature)
+
+   coupling%Coupling_failed = .false.
+   coupling%Coupling_iterations = 0
+   coupling%TsurfNearestAbove = -9999.0
+   coupling%TsurfNearestBelow = -9999.0
+   coupling%RadCoeff = 1.0
+   coupling%RadCoefNearestAbove = -9999.0
+   coupling%RadCoefNearestBelow = -9999.0
+   coupling%RadCoeffPrevious = 1.0
+   coupling%SwRadCof = 1.0
+   coupling%LWRadCof = 1.0
+   coupling%SW_correction = 0.0
+   coupling%LW_correction = 0.0
+   if (coupling%CoupPhaseN < coupling%NObs) Then
+      coupling%CoupPhaseN = coupling%CoupPhaseN + 1
+      coupling%LastTsurfObs = coupling%obsTsurf(coupling%CoupPhaseN)
+   end if
+
+End Subroutine startNextCouplingPhase
+
 !>Save data at the beginning of the coupling period
 Subroutine saveDataForCoupling(datai, ground, coupling, surf,&
  modelInput, settings)
@@ -186,7 +227,8 @@ Subroutine saveDataForCoupling(datai, ground, coupling, surf,&
    type(modelSettings), intent(IN) :: settings  !< Variables for model settings
    integer :: i
    integer :: couplingLen !Lenght of coupling period
-   couplingLen=coupling%couplingEndI(1)-coupling%couplingStartI(1)+1
+   couplingLen=coupling%couplingEndI(coupling%CoupPhaseN)- &
+               coupling%couplingStartI(coupling%CoupPhaseN)+1
 
    coupling%saveDatai = datai
    coupling%TsurfAveSave = surf%TsurfAve
@@ -202,10 +244,10 @@ Subroutine saveDataForCoupling(datai, ground, coupling, surf,&
    end do
 
    do i=1,couplingLen
-      coupling%SWSave(i)=modelInput%SW(coupling%couplingStartI(1)+i-1)
-      coupling%SWDirSave(i)=modelInput%SW_dir(coupling%couplingStartI(1)+i-1)
-      coupling%LWSave(i)=modelInput%LW(coupling%couplingStartI(1)+i-1)
-   end do 
+      coupling%SWSave(i)=modelInput%SW(coupling%couplingStartI(coupling%CoupPhaseN)+i-1)
+      coupling%SWDirSave(i)=modelInput%SW_dir(coupling%couplingStartI(coupling%CoupPhaseN)+i-1)
+      coupling%LWSave(i)=modelInput%LW(coupling%couplingStartI(coupling%CoupPhaseN)+i-1)
+   end do
 
 end subroutine saveDataForCoupling
 
@@ -232,7 +274,8 @@ Subroutine uploadDataForCoupling(datai, ground, coupling, surf,&
 
    integer :: i,couplingLen
 
-   couplingLen=coupling%couplingEndI(1)-coupling%couplingStartI(1)+1
+   couplingLen=coupling%couplingEndI(coupling%CoupPhaseN)- &
+               coupling%couplingStartI(coupling%CoupPhaseN)+1
    datai = coupling%saveDatai
    surf%TsurfAve = coupling%TsurfAveSave
    surf%srfWatmms = coupling%SrfWatmmsSave
@@ -247,10 +290,10 @@ Subroutine uploadDataForCoupling(datai, ground, coupling, surf,&
    end do
 
    do i=1,couplingLen
-      modelInput%SW(coupling%couplingStartI(1)+i-1)=coupling%SWSave(i)
-      modelInput%SW_dir(coupling%couplingStartI(1)+i-1)=coupling%SWDirSave(i)
-      modelInput%LW(coupling%couplingStartI(1)+i-1)=coupling%LWSave(i)
-   end do 
+      modelInput%SW(coupling%couplingStartI(coupling%CoupPhaseN)+i-1)=coupling%SWSave(i)
+      modelInput%SW_dir(coupling%couplingStartI(coupling%CoupPhaseN)+i-1)=coupling%SWDirSave(i)
+      modelInput%LW(coupling%couplingStartI(coupling%CoupPhaseN)+i-1)=coupling%LWSave(i)
+   end do
 
 end subroutine
 
@@ -447,16 +490,25 @@ Subroutine Coupling_control(TSurfAve, coupling)
             coupling%TsurfNearestBelow = -9999
          end if
          coupling%RadCoeffPrevious = coupling%RadCoeff
+      Else if (coupling%RadCoeff > 3.0) Then
+         !Coupling converged, but only with a radiation coefficient that is not
+         !physically plausible. Discard the result and run the coupling period
+         !once more without radiation correction, so that the surface temperature
+         !excursion caused by the discarded iteration is not left in the output.
+         write (*, *) "coupling coefficient too big, coupling failed"
+         coupling%coupling_failed = .true.
+         coupling%RadCoeff = 1.0
+         coupling%RadCoeffPrevious = 1.0
+         coupling%SwRadCof = 1.0
+         coupling%LWRadCof = 1.0
+         coupling%SW_correction = 0.0
+         coupling%LW_correction = 0.0
+         coupling%TsurfNearestAbove = -9999.0
+         coupling%TsurfNearestBelow = -9999.0
+         coupling%RadCoefNearestAbove = -9999.0
+         coupling%RadCoefNearestBelow = -9999.0
+         coupling%start_coupling_again = .true.
       Else
-         if (coupling%RadCoeff > 3.0) Then
-            write (*, *) "coupling coefficient too big, coupling failed"
-            coupling%coupling_failed = .true.
-            coupling%RadCoeff =1.0
-            coupling%SwRadCof = 1.0
-            coupling%LWRadCof = 1.0
-            coupling%SW_correction = 0.0
-            coupling%LW_correction = 0.0
-         end if
          !Coupling was successful
          coupling%SW_correction = coupling%SwRadCof - 1.0
          coupling%LW_correction = coupling%LWRadCof - 1.0
@@ -482,7 +534,8 @@ End Subroutine
 
 !>Determine coupling times from car obs times
 !>This function assumes that coupling can be done multiple times, separately for each car observation
-!>However, multicoupling feature is not used in the current model version
+!>Multiple coupling phases are used when the caller gives more than one
+!>surface temperature observation (LocalParameters%nCouplingObs)
 Subroutine initCouplingTimes(coupling, settings)
    use RoadSurfVariables
    Implicit None
@@ -497,6 +550,7 @@ Subroutine initCouplingTimes(coupling, settings)
 
    integer:: i
    integer:: couplingLen
+   integer:: phaseLen
 
    DTs = settings%DTSecs
 
@@ -506,23 +560,32 @@ Subroutine initCouplingTimes(coupling, settings)
       coupling%couplingEndI(i) = -99
    end do
 
-   !If only one coupling time
+   !One coupling phase per observation. Each phase ends at its observation and
+   !starts coupling_minutes (three hours by default) earlier.
    if (settings%use_coupling .and. coupling%obsI(1) > -1) Then
-      coupling%couplingEndI(1) = coupling%obsI(1)
-      if (coupling%obsI(1) <= settings%coupling_minutes*60/DTs) then
-         coupling%couplingStartI(1) = 1
-      else
-         !start coupling three hours before the observation
-         coupling%couplingStartI(1) = coupling%obsI(1) - &
-                                      int(settings%coupling_minutes*60/DTs) 
-
-      end if
+      phaseLen = int(settings%coupling_minutes*60/DTs)
+      Do i = 1, coupling%NObs
+         if (coupling%obsI(i) < 1) cycle
+         coupling%couplingEndI(i) = coupling%obsI(i)
+         if (coupling%obsI(i) <= phaseLen) then
+            coupling%couplingStartI(i) = 1
+         else
+            coupling%couplingStartI(i) = coupling%obsI(i) - phaseLen
+         end if
+      end do
 
    else
       settings%use_coupling = .false.
 
    end if
-   couplingLen=coupling%couplingEndI(1)-coupling%couplingStartI(1)+1
+   !The save arrays have to fit the longest coupling phase
+   couplingLen = 1
+   Do i = 1, max(coupling%NObs, 1)
+      if (coupling%couplingEndI(i) > 0) Then
+         couplingLen = max(couplingLen, &
+                           coupling%couplingEndI(i) - coupling%couplingStartI(i) + 1)
+      end if
+   end do
    allocate(coupling%SWSave(couplingLen))
    allocate(coupling%SWDirSave(couplingLen))
    allocate(coupling%LWSave(couplingLen))

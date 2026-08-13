@@ -1,4 +1,8 @@
 #pragma once
+/* Maximum number of surface temperature observations the model can couple to.
+   Must match the array sizes in LocalParameters.f90.inc and CouplingVariables.f90.inc */
+#define MAXCOUPLINGOBS 48
+
 #define PRECIPITATION_NONE 0
 #define PRECIPITATION_RAIN 1
 #define PRECIPITATION_SLEET 2
