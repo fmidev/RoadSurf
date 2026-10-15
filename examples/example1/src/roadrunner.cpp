@@ -156,7 +156,7 @@ std::vector<time_t> get_times(const InputSettings& pSettings)
 // ----------------------------------------------------------------------
 
 InputData read_input(InputSettings& pSettings,
-                                      const std::vector<time_t> pTimes,
+                                      const std::vector<time_t>& pTimes,
                                       const DataHandler& pDataHandler,
                                       const InputParameters& parameters,
                                       LocalParameters& lParameters,
@@ -284,7 +284,7 @@ InputData read_input(InputSettings& pSettings,
  * \brief Save output to json object
  */
 // ----------------------------------------------------------------------
-void save_output(OutputData& output, InputData input, LocalParameters& lParameters, 
+void save_output(OutputData& output, const InputData& input, LocalParameters& lParameters,
                  int pointID, InputSettings& pSettings,std::vector<time_t> times,
                  int loc_index,Json::Value& forecast)
 {
@@ -334,7 +334,7 @@ void save_output(OutputData& output, InputData input, LocalParameters& lParamete
  */
 // ----------------------------------------------------------------------
 
-void write_output(std::string outputFileName, const Json::Value& forecast)
+void write_output(const std::string& outputFileName, const Json::Value& forecast)
 {
   std::ofstream ofs(outputFileName);
   Json::StreamWriterBuilder builder;

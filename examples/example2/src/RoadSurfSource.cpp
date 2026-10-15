@@ -343,7 +343,7 @@ RoadSurfSource::Impl::Impl(const NFmiMetTime& pWallClock,
                            const NFmiMetTime& pEndTime,
                            const Json::Value& pSource,
                            const Json::Value& pConfig)
-    : mWallClock(pWallClock), mStartTime(pStartTime), mEndTime(pEndTime)
+    : mWallClock(pWallClock), mStartTime(pStartTime), mEndTime(pEndTime), mRadius(2.0)
 {
 #if 0
   Json::StyledWriter writer;
@@ -356,7 +356,7 @@ RoadSurfSource::Impl::Impl(const NFmiMetTime& pWallClock,
   // since DataSourceFactory depends on it.
 
   auto name = pSource.get("name", nulljson).asString();
-  mRadius = 2.0;
+
   // Parse resource location
 
   auto jfile = pSource.get("filename", nulljson);

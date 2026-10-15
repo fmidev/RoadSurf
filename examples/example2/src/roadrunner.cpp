@@ -841,7 +841,7 @@ void add_options(Json::Value& pJson)
 }
 
 // Return true if there is a file containing string in the target directory
-bool fileContainingStringExists(std::string target_directory, InputSettings& settings)
+bool fileContainingStringExists(const std::string& target_directory, InputSettings& settings)
 {
   std::string itrFile;
   std::string target_substring = Fmi::to_iso_string(settings.forecast_time);
