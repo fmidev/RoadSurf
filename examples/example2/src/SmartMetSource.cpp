@@ -1,3 +1,5 @@
+#include <cmath>
+#include <cstdlib>
 #include "SmartMetSource.h"
 #include "FileTools.h"
 #include "MeteorologyTools.h"
@@ -723,7 +725,7 @@ void SmartMetSource::Impl::RemoveTooManySameValues(Observations& pObs,int sameLi
    int count=1;
    double previous= pObs[0].*pPtr;
    for (std::size_t i = 1; i < pObs.size(); ++i) {
-      if (abs(pObs[i].*pPtr-previous)<0.001){
+      if (std::abs(pObs[i].*pPtr-previous)<0.001){
          ++count;
       }else{
          if (count>=sameLimit){
@@ -788,11 +790,11 @@ void SmartMetSource::Impl::RemoveSpikes(Observations& pObs,double spikeSize, std
 		double Weather::*pPtr){
    double previous= pObs[0].*pPtr;
    for (std::size_t i = 1; i < pObs.size(); i++) {
-      if (abs(pObs[i].*pPtr-previous)>spikeSize){
+      if (std::abs(pObs[i].*pPtr-previous)>spikeSize){
 	std::size_t checkLimit=i+maxSpikeDuration;
         auto checkEnd=std::min(pObs.size(),checkLimit);
         for (std::size_t j=i+1; j<checkEnd; j++){
-           if (abs(pObs[i].*pPtr-pObs[j].*pPtr)>spikeSize){
+           if (std::abs(pObs[i].*pPtr-pObs[j].*pPtr)>spikeSize){
              for (std::size_t k =i; k<j; ++k){
                 pObs[k].*pPtr=MISSING;
              }
@@ -853,7 +855,7 @@ void SmartMetSource::Impl::RemoveOutliers()
           std::cout<<mean<<" "<<stdDev<<" "<<treshold<<std::endl;
           for (std::size_t j =0; j<values.size();j++){
              std::cout<<values[j]<<" "<<pos_vector[j]<<" "<<it_vector[j]<<std::endl;
-             if(abs(values[j]-mean)>=treshold){
+             if(std::abs(values[j]-mean)>=treshold){
           	  std::cout<<"outlier detected"<<std::endl;
              }
           }

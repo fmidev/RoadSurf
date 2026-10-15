@@ -1,3 +1,5 @@
+#include <cmath>
+#include <cstdlib>
 #include "JsonSource.h"
 #include "JsonTools.h"
 #include "InputData.h"
@@ -83,7 +85,7 @@ void JsonSource::Impl::interpolate(InputData rawData,
   //is reached
   while (rawPos+1<rawLen and simPos<simLen)
   {  //Check if times are equal
-     if (abs(simtime[simPos]-rawtime[rawPos])<0.01)
+     if (std::abs(simtime[simPos]-rawtime[rawPos])<0.01)
      {
          //If times are equal, insert raw data to interpolatd data
          //if value is not missing
@@ -111,7 +113,7 @@ void JsonSource::Impl::interpolate(InputData rawData,
             interpolatedData.PrecPhase[simPos]=rawData.PrecPhase[rawPos];
          simPos++;
      //If simtime equals next time in rawtime, advance positin in raw data
-     }else if (abs(simtime[simPos]-rawtime[rawPos+1])<0.01)
+     }else if (std::abs(simtime[simPos]-rawtime[rawPos+1])<0.01)
      {
          rawPos++;
      }else 
