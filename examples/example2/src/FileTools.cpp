@@ -42,7 +42,7 @@ std::list<NFmiStation> read_filename_locations(const std::string& pFilename)
     auto lon = std::stod(parts[1]);
     auto lat = std::stod(parts[2]);
 
-    locations.emplace_back(NFmiStation(id, name, lon, lat));
+    locations.emplace_back(id, name, lon, lat);
   }
 
   return locations;

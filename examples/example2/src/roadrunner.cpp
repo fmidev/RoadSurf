@@ -122,7 +122,7 @@ SimulationTimes get_times(const InputSettings& pSettings)
   auto t = pSettings.start_time;
   for (int i = 0; i < pSettings.SimLen; i++)
   {
-    times.emplace_back(SimulationTime{t});
+    times.emplace_back(t);
     t += dt;
   }
 
@@ -688,7 +688,7 @@ void run_querydata_locations_async(NFmiQueryData& pQ,
           {
             // initialize output vectors with missing values
             OutputData output(pSettings.SimLen);
-            InputData inputT = *input;
+            const InputData& inputT = *input;
             // Pass the data to Fortran via pointers
             auto outPointers = output.pointers();
             auto inPointers = inputT.pointers();

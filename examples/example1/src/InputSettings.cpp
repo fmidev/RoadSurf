@@ -26,7 +26,7 @@ time_t get_forecast_time(const Json::Value &pJson,
     }
   //If forecast start time is not given in command line or config file,
   //use curretn time
-  time_t now=time(0);
+  time_t now=time(nullptr);
   struct ::tm forecast_startBuffer{};  // gmtime_r is thread safe
   tm *forecast_start = gmtime_r(&now, &forecast_startBuffer);
   // Round down to to full minutes

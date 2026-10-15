@@ -306,7 +306,7 @@ void RoadSurfSource::Impl::read_obs_list(const std::string& mFilename, const std
           ending = "a";
         }
 
-        fileNames.emplace_back(make_pair(time_stamp + ending, fileName));
+        fileNames.emplace_back(time_stamp + ending, fileName);
       }
       intime.close();
     }

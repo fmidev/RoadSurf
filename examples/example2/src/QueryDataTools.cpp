@@ -74,7 +74,7 @@ std::list<NFmiStation> read_keyword_locations(const Json::Value& pJson)
 
   std::list<NFmiStation> locations;
   for (const auto& location : places)  // NOLINT(cppcheck-useStlAlgorithm)
-    locations.emplace_back(NFmiStation(location.id, location.name, location.lon, location.lat));
+    locations.emplace_back(location.id, location.name, location.lon, location.lat);
 
   return locations;
 }

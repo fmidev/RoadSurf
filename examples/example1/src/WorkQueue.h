@@ -86,7 +86,7 @@ class WorkQueue : std::mutex, std::condition_variable
     void join() { for (auto& t : *this) { t.join(); } }
   } threads;
 
-  using lock_guard = std::lock_guard<std::mutex>;
+  using lock_guard = std::scoped_lock<std::mutex>;
   using unique_lock = std::unique_lock<std::mutex>;
 
   template <typename Function>

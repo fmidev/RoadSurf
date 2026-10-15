@@ -63,10 +63,10 @@ bool parse_options(int argc, char* argv[])
   std::string stime;
   //Option descriptions
   std::vector<std::string> desc;
-  desc.push_back("-h print help message");
-  desc.push_back("-j number of parallel jobs");
-  desc.push_back("-t simulation time");
-  desc.push_back("-c configuration file");
+  desc.emplace_back("-h print help message");
+  desc.emplace_back("-j number of parallel jobs");
+  desc.emplace_back("-t simulation time");
+  desc.emplace_back("-c configuration file");
   int descLen = static_cast<int>(desc.size());
 
   int opt; 

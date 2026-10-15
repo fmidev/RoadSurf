@@ -17,8 +17,8 @@ class JsonSource::Impl
        const time_t& pEndTime,
        const Json::Value& pSource,
        const Json::Value& pConfig,
-       const int SimLen,
-       const int DTSecs);
+       int SimLen,
+       int DTSecs);
 
   //Get input data for point
   void GetWeather(InputData& pData, int pointID) const;

@@ -25,8 +25,8 @@ class DataHandler
             const time_t& pStartTime,
             const time_t& pEndTime,
             const Json::Value& pConfig,
-            const int SimLen,
-            const int DTSecs);
+            int SimLen,
+            int DTSecs);
 
   //Get data for one point
   void GetWeather(InputData& pData, int pointID) const;

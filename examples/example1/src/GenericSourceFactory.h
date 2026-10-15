@@ -10,6 +10,6 @@ GenericSource* create(const time_t& pWallClock,
                    const time_t& pEndTime,
                    const Json::Value& pSource,
                    const Json::Value& pConfig,
-                   const int SimLen,
-                   const int DTSecs);
+                   int SimLen,
+                   int DTSecs);
 }  // namespace GenericSourceFactory
