@@ -41,6 +41,8 @@
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 std::list<NFmiStation> read_keyword_locations(const Json::Value& pJson)
 {
   Json::Value nulljson;
@@ -208,6 +210,7 @@ NFmiHPlaceDescriptor create_place_descriptor(const std::list<NFmiStation>& pStat
   }
   return {lbag};
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -235,6 +238,8 @@ std::unique_ptr<NFmiQueryData> create_coordinates_querydata(const InputSettings&
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 NFmiGrid create_grid(const Json::Value& pJson)
 {
   auto jproj = Json::Path(".points.projection").resolve(pJson);
@@ -247,6 +252,7 @@ NFmiGrid create_grid(const Json::Value& pJson)
                 static_cast<int>(round(area->Height() + 1)));
   return grid;
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -282,6 +288,8 @@ WriteStride get_write_stride(NFmiFastQueryInfo& qi, const InputSettings& pSettin
   return {startpos, stride};
 }
 
+namespace
+{
 std::vector<double> calc_difference(std::vector<double> vec1, std::vector<double> vec2)
 {
   std::vector<double> dif;
@@ -294,6 +302,7 @@ std::vector<double> calc_difference(std::vector<double> vec1, std::vector<double
   }
   return dif;
 }
+}  // namespace
 
 template <typename T>
 void write_timeseries(NFmiFastQueryInfo& pQ,

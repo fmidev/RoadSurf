@@ -49,6 +49,8 @@ MutexType read_mutex;
 using namespace boost::archive;
 using namespace boost::posix_time;
 using namespace std::filesystem;
+namespace
+{
 // Parsed command line options
 Options options;
 
@@ -857,6 +859,7 @@ bool fileContainingStringExists(const std::string& target_directory, InputSettin
   }
   return false;
 }
+}  // namespace
 // ----------------------------------------------------------------------
 /*!
  * \brief Main program

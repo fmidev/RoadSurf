@@ -8,6 +8,8 @@
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 Fmi::DateTime get_forecast_time(const Json::Value &pJson,
                                            const std::optional<Fmi::DateTime> &pTime)
 {
@@ -53,6 +55,7 @@ Fmi::DateTime get_model_end_time(const Fmi::DateTime &pWallClock,
   auto hours = Json::Path(".time.forecast").resolve(pJson, 48).asInt();
   return pWallClock + Fmi::Hours(hours);
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!

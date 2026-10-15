@@ -131,6 +131,8 @@ class QueryDataSource::Impl
 
 QueryDataSource::~QueryDataSource() = default;
 
+namespace
+{
 ///-----------------------------------------------------------------------
 /*!
  * return kfmiparameter of the corresponding varaible
@@ -152,6 +154,7 @@ FmiParameterName parse_parameter_name(const std::string& pName)
     return cf_depth;
   throw std::runtime_error("Unknown parameter name '" + pName + "'");
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!

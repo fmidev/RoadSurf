@@ -27,6 +27,8 @@ extern "C"
                      const InputParameters* pInputParams,
                      const LocalParameters* lParameters); 
 }
+namespace
+{
 // Parsed command line options
 Options options;
 
@@ -43,6 +45,7 @@ inline bool is_missing(double pValue)
 {
   return (std::isnan(pValue) || pValue < -9000);
 }
+}  // namespace
 //Args structure required by multi thread run
 struct Args{
    int loc_index;
@@ -55,6 +58,8 @@ struct Args{
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 bool parse_options(int argc, char* argv[])
 {
   //forecast start time
@@ -519,6 +524,7 @@ void run(const Json::Value& pJson, InputSettings& pSettings,
   else
     run_locations_sync(pJson, pSettings, pDataHandler);
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!

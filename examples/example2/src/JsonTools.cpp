@@ -35,6 +35,8 @@ bool override(int* pValue, const Json::Value& pJson, const char* pName)
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 std::string read_file(const std::string& pFilename)
 {
   std::ifstream in(pFilename.c_str());
@@ -47,6 +49,7 @@ std::string read_file(const std::string& pFilename)
 
   return content;
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!

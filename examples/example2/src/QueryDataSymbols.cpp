@@ -12,11 +12,14 @@ using namespace std;
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 FmiParameterName toenum(const string& varname)
 {
   static NFmiEnumConverter converter;
   return static_cast<FmiParameterName>(converter.ToEnum(varname));
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!

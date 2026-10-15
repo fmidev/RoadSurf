@@ -7,6 +7,8 @@
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 time_t get_forecast_time(const Json::Value &pJson,
                          const time_t &pTime)
 {
@@ -60,6 +62,7 @@ time_t get_model_end_time(const time_t &pWallClock,
   auto hours = Json::Path(".time.forecast").resolve(pJson, 48).asInt();
   return pWallClock + hours*3600;
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
