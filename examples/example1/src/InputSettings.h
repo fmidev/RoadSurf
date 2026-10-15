@@ -21,7 +21,7 @@ struct InputSettings
   double couplingEffectReduction=4.0*3600; //!< Parameter used to calculate radiation
                                            //!< coefficient after coupling
   int outputStep = 60;                     //!< frequency of output in minutes
-  time_t forecast_time;  //!< Wall clock time, possibly simulated one
-  time_t start_time;     //!< Model simulation start time
-  time_t end_time;       //!< Model simulation end time
+  time_t forecast_time = 0;  //!< Wall clock time, possibly simulated one
+  time_t start_time = 0;     //!< Model simulation start time
+  time_t end_time = 0;       //!< Model simulation end time
 };

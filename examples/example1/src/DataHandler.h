@@ -39,8 +39,8 @@ class DataHandler
 
  private:
   std::vector<GenericSource*> mDataSources;
-  time_t mForecastTime;
-  time_t mStartTime;
-  time_t mEndTime;
+  time_t mForecastTime = 0;
+  time_t mStartTime = 0;
+  time_t mEndTime = 0;
 
 };  // class DataHandler

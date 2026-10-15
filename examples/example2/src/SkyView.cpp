@@ -93,6 +93,7 @@ SkyView::SkyView(const Json::Value& pJson )
         }
         else
         {
+          mStationTree.insert(Station(lon, lat, id));
           SkyVariables skyVar;
           skyVar.local_horizons = local_horizons;
           skyVar.sky_view = 1.0;

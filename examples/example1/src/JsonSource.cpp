@@ -242,7 +242,7 @@ JsonSource::Impl::Impl(const time_t& pWallClock,
     //Read times to vector from the data
     for (int index=0; index<dataLen; index++)
     {
-       struct tm timeStruct;
+       struct tm timeStruct{};
        std::string timeString=dataArray[index].asString();
        strptime(timeString.c_str(),"%Y-%m-%d %H:%M",&timeStruct);
        timeStruct.tm_sec=0;
@@ -297,7 +297,8 @@ JsonSource::Impl::Impl(const time_t& pWallClock,
     //Fill the time arrays in interpolated data
     for (simPos=0; simPos < SimLen; ++simPos)
     {
-        tt=localtime(&simTime[simPos]);
+        struct ::tm ttBuffer{};  // localtime_r is thread safe
+        tt=localtime_r(&simTime[simPos], &ttBuffer);
         tt->tm_year+=1900;
         tt->tm_mon+=1;
         interpolatedData.year[simPos]=tt->tm_year;

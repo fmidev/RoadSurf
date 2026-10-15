@@ -43,7 +43,7 @@ class QueryDataSource::Impl
   using CompareValues = std::vector<long>;  // NFmiTime::GetCompareValue
   using Times = std::vector<NFmiMetTime>;
 
-  void error(const std::string& pMessage) const;
+  [[noreturn]] void error(const std::string& pMessage) const;
   void check_params();
   bool uses_param(FmiParameterName pParam) const;
   void update_timeseries(const NFmiPoint& pLatLon) const;

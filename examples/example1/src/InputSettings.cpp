@@ -14,7 +14,7 @@ time_t get_forecast_time(const Json::Value &pJson,
   if (pTime)
     return pTime;
 
-  struct tm forecast_start_time;
+  struct tm forecast_start_time{};
   Json::Value nulljson;
   //get forecast start time from config file
   auto tmp = Json::Path(".time.now").resolve(pJson).asString();
@@ -27,7 +27,8 @@ time_t get_forecast_time(const Json::Value &pJson,
   //If forecast start time is not given in command line or config file,
   //use curretn time
   time_t now=time(0);
-  tm *forecast_start = gmtime(&now);
+  struct ::tm forecast_startBuffer{};  // gmtime_r is thread safe
+  tm *forecast_start = gmtime_r(&now, &forecast_startBuffer);
   // Round down to to full minutes
   forecast_start->tm_sec=0;
   return mktime(forecast_start);

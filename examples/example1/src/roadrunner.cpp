@@ -34,7 +34,7 @@ Options options;
 // std::filesystem::exist not available in C++11
 inline bool file_exists (const std::string& name)
 {
-   struct stat buffer;
+   struct stat buffer{};
    return (stat (name.c_str(), &buffer) == 0);
 }
 
@@ -58,7 +58,7 @@ struct Args{
 bool parse_options(int argc, char* argv[])
 {
   //forecast start time
-  struct tm forecast_start_time;
+  struct tm forecast_start_time{};
   forecast_start_time.tm_isdst=-1;
   std::string stime;
   //Option descriptions
@@ -71,6 +71,7 @@ bool parse_options(int argc, char* argv[])
 
   int opt; 
   //Go trough options
+  // NOLINTNEXTLINE(concurrency-mt-unsafe): single-threaded command line tool
   while ((opt = getopt(argc,argv,"hj:t:c:")) !=-1)
   {
      switch (opt)
@@ -176,14 +177,15 @@ InputData read_input(InputSettings& pSettings,
     skyview.GetSkyVariables(lParameters, data, pointID);
     //For convertin time to string
     const std::size_t MAXLEN=20;
-    std::array<char,MAXLEN> timeString;
+    std::array<char,MAXLEN> timeString{};
     
     std::string fmt="%Y-%m-%dT%H:%M";
     // Verify the model has all required parameters
     for (int i = 0; i < pSettings.SimLen; i++)
     {
       //convert time to string
-      auto pTime=gmtime(&pTimes[i]);
+      struct ::tm pTimeBuffer{};  // gmtime_r is thread safe
+      auto pTime=gmtime_r(&pTimes[i], &pTimeBuffer);
       std::strftime(timeString.data(),MAXLEN,fmt.c_str(),pTime);
       if (is_missing(data.tair[i]))
       {
@@ -290,7 +292,7 @@ void save_output(OutputData& output, InputData input, LocalParameters& lParamete
    int step=pSettings.outputStep*60/pSettings.DTSecs;
    //Values for time to string conversion
    const std::size_t MAXLEN=20;
-   std::array<char,MAXLEN> timeString; 
+   std::array<char,MAXLEN> timeString{}; 
    std::string fmt="%Y-%m-%dT%H:%M";
    //output data vectors
    Json::Value timeVec(Json::arrayValue);
@@ -303,7 +305,8 @@ void save_output(OutputData& output, InputData input, LocalParameters& lParamete
    for (int i = 0; i < pSettings.SimLen; i+=step)
    {
       //time tos string
-      auto pTime=gmtime(&times[i]);
+      struct ::tm pTimeBuffer{};  // gmtime_r is thread safe
+      auto pTime=gmtime_r(&times[i], &pTimeBuffer);
       pTime->tm_isdst=-1;
       std::strftime(timeString.data(),MAXLEN,fmt.c_str(),pTime);
       //add data to vectors

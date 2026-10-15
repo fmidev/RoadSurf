@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 1.7.1
+Version: 26.10.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -53,6 +53,10 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
+* Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.15-1.fmi
+- Fixed clang-tidy correctness findings (member initialization, rule of five, printf formats, dead stores)
+- example1 uses the nearest station's sky view data, and example2 adds horizon-only stations to its station tree
+
 * Thu Aug 13 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 1.7.1-1.fmi
 - Discard the coupling result when the radiation coefficient exceeds the allowed
   maximum, and rerun the coupling period without radiation correction so that the

@@ -559,7 +559,7 @@ void run_querydata_locations_sync(NFmiQueryData& pQ,
       // Get input data for point. Returns nothing if missing value is found in the data
       const auto input =
           read_input(lonlat, times, pSettings, pDataManager, parameters, lParameters, skyview); 
-     if (input)
+      if (input)
       {
         // initialize output vectors with missing values
         OutputData output(pSettings.SimLen);

@@ -16,5 +16,5 @@ struct Options
   std::string outfile;
   std::string infile;
   std::string configfile;
-  time_t time;
+  time_t time = 0;
 };

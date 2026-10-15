@@ -173,7 +173,7 @@ void RoadSurfSource::Impl::read_file(const std::string& mFilename)
         static_cast<void>(std::stod(number_string));
         is_valid = true;
       }
-      catch (std::exception& ia)
+      catch (std::exception&)
       {
         is_valid = false;
       }

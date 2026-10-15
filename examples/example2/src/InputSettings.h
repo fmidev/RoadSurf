@@ -26,5 +26,5 @@ struct InputSettings
   Fmi::DateTime forecast_time;  //!< Wall clock time, possibly simulated one
   Fmi::DateTime start_time;     //!< Model simulation start time
   Fmi::DateTime end_time;       //!< Model simulation end time
-  int use_obs_qc;                           //!< use quality control for observations
+  int use_obs_qc = 0;                           //!< use quality control for observations
 };

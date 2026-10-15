@@ -42,6 +42,8 @@ SkyView::SkyView(const Json::Value& pJson )
     while (in.good())
     {
       in >> id >> name >> lat >> lon >> sky_view;
+      //Add station to station tree
+      mStationTree.insert(Station(lon, lat, id));
       SkyVariables skyVar;  // sky view factor and horizons
                             // are saved in this structure
       // check if sky view factor is on right range
@@ -102,6 +104,7 @@ SkyView::SkyView(const Json::Value& pJson )
         {
 	  //Else give sky view factor a default value and save
 	  //local horizon angles
+          mStationTree.insert(Station(lon, lat, id));
           SkyVariables skyVar;
           skyVar.local_horizons = local_horizons;
           skyVar.sky_view = 1.0;
@@ -112,6 +115,7 @@ SkyView::SkyView(const Json::Value& pJson )
       {
 	//If mdata is empty give sky view factr a default value
 	//and save local horizon angels
+        mStationTree.insert(Station(lon, lat, id));
         SkyVariables skyVar;
         skyVar.sky_view = 1.0;
         skyVar.local_horizons = local_horizons;
@@ -130,7 +134,20 @@ void SkyView::GetSkyVariables(LocalParameters& lParameters,
   // Check if there is data for point
   auto myData = mData.find(pointID);
   if (myData == mData.end())
-    return;
+  {
+    // Else use the data of the nearest station, if near enough
+    const double missing = -9999.0;
+    if (lParameters.lat == missing || lParameters.lon == missing)
+      return;
+    const double radius = 0.1;  // km
+    auto nearest_station = mStationTree.nearest(Station{lParameters.lon, lParameters.lat},
+                                                Station::ChordLength(radius));
+    if (!nearest_station)
+      return;
+    myData = mData.find(nearest_station->ID());
+    if (myData == mData.end())
+      return;
+  }
   //Save sky view factor and locan horizon angle to input data
   const auto& SkyVar = myData->second;
   lParameters.sky_view = SkyVar.sky_view;

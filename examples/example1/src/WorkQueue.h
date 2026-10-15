@@ -103,7 +103,7 @@ class WorkQueue : std::mutex, std::condition_variable
       // doesn't work in g++ 4.8.5
           Type item{std::move(queue.front())};
 #else
-          Type item;
+          Type item{};
           std::swap(item, queue.front());
 #endif
           queue.pop();
