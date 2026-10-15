@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 26.10.15
+Version: 1.7.2
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -53,7 +53,7 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
-* Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.15-1.fmi
+* Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 1.7.2-1.fmi
 - Fixed clang-tidy correctness findings (member initialization, rule of five, printf formats, dead stores)
 - example1 uses the nearest station's sky view data, and example2 adds horizon-only stations to its station tree
 
