@@ -182,11 +182,11 @@ void JsonSource::Impl::interpolate(InputData rawData,
  */
 // ----------------------------------------------------------------------
 
-JsonSource::Impl::Impl(const time_t& pWallClock,
+JsonSource::Impl::Impl(const time_t& /*pWallClock*/,
                            const time_t& pStartTime,
-                           const time_t& pEndTime,
+                           const time_t& /*pEndTime*/,
                            const Json::Value& pSource,
-                           const Json::Value& pConfig,
+                           const Json::Value& /*pConfig*/,
                            const int SimLen,
                            const int DTSecs)
 {

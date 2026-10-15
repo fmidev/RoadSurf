@@ -163,7 +163,7 @@ std::vector<time_t> get_times(const InputSettings& pSettings)
 InputData read_input(InputSettings& pSettings,
                                       const std::vector<time_t>& pTimes,
                                       const DataHandler& pDataHandler,
-                                      const InputParameters& parameters,
+                                      const InputParameters& /*parameters*/,
                                       LocalParameters& lParameters,
                                       SkyView& skyview,
                                       int pointID,
