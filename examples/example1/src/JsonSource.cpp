@@ -43,22 +43,82 @@ class JsonSource::Impl
 
 JsonSource::~JsonSource() = default;
 
-// ----------------------------------------------------------------------
-/*!
- * \brief Interpolates raw data for each time step in simulation
- */
-// ----------------------------------------------------------------------
-void JsonSource::Impl::interpolate(InputData rawData,
-                 InputData& interpolatedData,
-                 std::vector<time_t> rawtime,
-                 std::vector<time_t> simtime)
+namespace
+{
+// Copy the value if it is above the missing value limit
+template <typename T>
+void copy_if_above(
+    const std::vector<T>& src, std::vector<T>& dst, int srcPos, int dstPos, double limit)
+{
+  if (src[srcPos] > limit)
+    dst[dstPos] = src[srcPos];
+}
+
+// Interpolate linearly in time if neither raw value is missing
+void interpolate_if_valid(const std::vector<double>& raw,
+                          std::vector<double>& interpolated,
+                          int rawPos,
+                          int simPos,
+                          const std::vector<time_t>& rawtime,
+                          const std::vector<time_t>& simtime,
+                          double limit)
+{
+  if (raw[rawPos] > limit and raw[rawPos + 1] > limit)
+    interpolated[simPos] = raw[rawPos] + (simtime[simPos] - rawtime[rawPos]) *
+                                             (raw[rawPos + 1] - raw[rawPos]) /
+                                             (rawtime[rawPos + 1] - rawtime[rawPos]);
+}
+
+// Copy the raw data at an equal time if the values are not missing
+void copy_raw_values(const InputData& rawData, InputData& interpolatedData, int rawPos, int simPos)
+{
+  copy_if_above(rawData.tair, interpolatedData.tair, rawPos, simPos, -100.0);
+  copy_if_above(rawData.tdew, interpolatedData.tdew, rawPos, simPos, -100.0);
+  copy_if_above(rawData.VZ, interpolatedData.VZ, rawPos, simPos, -100.0);
+  copy_if_above(rawData.Rhz, interpolatedData.Rhz, rawPos, simPos, -100.0);
+  copy_if_above(rawData.prec, interpolatedData.prec, rawPos, simPos, -100.0);
+  copy_if_above(rawData.SW, interpolatedData.SW, rawPos, simPos, -100.0);
+  copy_if_above(rawData.LW, interpolatedData.LW, rawPos, simPos, -100.0);
+  copy_if_above(rawData.SW_dir, interpolatedData.SW_dir, rawPos, simPos, -100.0);
+  copy_if_above(rawData.LW_net, interpolatedData.LW_net, rawPos, simPos, -1000.0);
+  copy_if_above(rawData.TSurfObs, interpolatedData.TSurfObs, rawPos, simPos, -100.0);
+  copy_if_above(rawData.PrecPhase, interpolatedData.PrecPhase, rawPos, simPos, -100.0);
+}
+
+// Interpolate the raw data between two raw times
+void interpolate_raw_values(const InputData& rawData,
+                            InputData& interpolatedData,
+                            int rawPos,
+                            int simPos,
+                            const std::vector<time_t>& rawtime,
+                            const std::vector<time_t>& simtime)
+{
+  interpolate_if_valid(rawData.tair, interpolatedData.tair, rawPos, simPos, rawtime, simtime, -100.0);
+  interpolate_if_valid(rawData.tdew, interpolatedData.tdew, rawPos, simPos, rawtime, simtime, -100.0);
+  interpolate_if_valid(rawData.VZ, interpolatedData.VZ, rawPos, simPos, rawtime, simtime, -100.0);
+  interpolate_if_valid(rawData.Rhz, interpolatedData.Rhz, rawPos, simPos, rawtime, simtime, -100.0);
+  interpolate_if_valid(rawData.prec, interpolatedData.prec, rawPos, simPos, rawtime, simtime, -100.0);
+  interpolate_if_valid(rawData.SW, interpolatedData.SW, rawPos, simPos, rawtime, simtime, -100.0);
+  interpolate_if_valid(rawData.LW, interpolatedData.LW, rawPos, simPos, rawtime, simtime, -100.0);
+  interpolate_if_valid(
+      rawData.SW_dir, interpolatedData.SW_dir, rawPos, simPos, rawtime, simtime, -100.0);
+  interpolate_if_valid(
+      rawData.LW_net, interpolatedData.LW_net, rawPos, simPos, rawtime, simtime, -1000.0);
+  interpolate_if_valid(
+      rawData.TSurfObs, interpolatedData.TSurfObs, rawPos, simPos, rawtime, simtime, -100.0);
+  copy_if_above(rawData.PrecPhase, interpolatedData.PrecPhase, rawPos + 1, simPos, -100.0);
+}
+
+// Find the first raw and simulation positions to process
+void find_start_positions(const std::vector<time_t>& rawtime,
+                          const std::vector<time_t>& simtime,
+                          int& rawPos,
+                          int& simPos)
 {
   //Original data length
-  int rawLen = static_cast<int>(rawtime.size()); 
+  int rawLen = static_cast<int>(rawtime.size());
   //Simulation length
-  int simLen = static_cast<int>(simtime.size()); 
-  int rawPos=0;
-  int simPos=0;
+  int simLen = static_cast<int>(simtime.size());
   //if simulation time starts after raw data time
   if (rawtime[0]<simtime[0])
   {
@@ -81,6 +141,170 @@ void JsonSource::Impl::interpolate(InputData rawData,
      }
      rawPos=0;
   }
+}
+
+// Read the times of the raw data
+std::vector<time_t> read_raw_times(const Json::Value& dataArray, int dataLen)
+{
+  std::vector<time_t> rawtime;
+  //Read times to vector from the data
+  for (int index=0; index<dataLen; index++)
+  {
+     struct tm timeStruct{};
+     std::string timeString=dataArray[index].asString();
+     strptime(timeString.c_str(),"%Y-%m-%d %H:%M",&timeStruct);
+     timeStruct.tm_sec=0;
+     timeStruct.tm_isdst=-1;
+     rawtime.push_back(mktime(&timeStruct));
+  }
+  return rawtime;
+}
+
+// Store a value of the variable with the given index in the variable name table
+void store_raw_value(InputData& rawData, int var, int index, double value)
+{
+  switch (var)
+  {
+    case 0:
+      rawData.tair[index] = value;
+      break;
+    case 1:
+      rawData.Rhz[index] = value;
+      break;
+    case 2:
+      rawData.tdew[index] = value;
+      break;
+    case 3:
+      rawData.VZ[index] = value;
+      break;
+    case 4:
+      rawData.PrecPhase[index] = value;
+      break;
+    case 5:
+      rawData.prec[index] = value;
+      break;
+    case 6:
+      rawData.LW_net[index] = value;
+      break;
+    case 7:
+      rawData.LW[index] = value;
+      break;
+    case 8:
+      rawData.SW[index] = value;
+      break;
+    case 9:
+      rawData.SW_dir[index] = value;
+      break;
+    case 10:
+      rawData.TSurfObs[index] = value;
+      break;
+    default:
+      break;
+  }
+}
+
+// Read the data for each variable
+void read_raw_values(const Json::Value& j,
+                     InputData& rawData,
+                     int dataLen,
+                     const std::string* variableNames,
+                     int Nvar)
+{
+  for (int var=0; var<Nvar; var++)
+  {
+     Json::Value nulljson;
+     //Get data array from json
+     auto dataArray=j.get(variableNames[var],nulljson);
+     if (!dataArray.isNull())
+     {
+        //Reach data for each time step
+        for (int index=0; index<dataLen; index++)
+          store_raw_value(rawData, var, index, dataArray[index].asDouble());
+     }
+  }
+}
+
+// Calculate tdew from rh or other way around if only one was in the input data
+void calculate_humidity(InputData& rawData, int dataLen)
+{
+  for (int index=0; index<dataLen; index++)
+  {
+      if (rawData.tdew[index]<-100 and rawData.Rhz[index]>-100 and rawData.tair[index]>-100)
+         rawData.tdew[index] = CalcTdewOrRH(rawData.tair[index], -9999.9, rawData.Rhz[index]);
+      if (rawData.Rhz[index]<-100 and rawData.tdew[index]>-100 and rawData.tair[index]>-100)
+         rawData.Rhz[index] = CalcTdewOrRH(rawData.tair[index], rawData.tdew[index], -9999.9);
+  }
+}
+
+// Fill the time arrays in interpolated data
+void fill_simulation_times(InputData& interpolatedData,
+                           const std::vector<time_t>& simTime,
+                           int SimLen)
+{
+  struct tm *tt = nullptr;
+  for (int simPos=0; simPos < SimLen; ++simPos)
+  {
+      struct ::tm ttBuffer{};  // localtime_r is thread safe
+      tt=localtime_r(&simTime[simPos], &ttBuffer);
+      tt->tm_year+=1900;
+      tt->tm_mon+=1;
+      interpolatedData.year[simPos]=tt->tm_year;
+      interpolatedData.month[simPos]=tt->tm_mon;
+      interpolatedData.day[simPos]=tt->tm_mday;
+      interpolatedData.hour[simPos]=tt->tm_hour;
+      interpolatedData.minute[simPos]=tt->tm_min;
+      interpolatedData.second[simPos]=tt->tm_sec;
+  }
+}
+
+// Copy the data of a station to the input data if not missing
+void copy_station_values(const InputData& w, InputData& pData)
+{
+  //Lenght of simulation
+  int SimLen = static_cast<int>(w.tair.size());
+  int simPos=0; //Index in data
+  //Add data to pData point by point if not missing
+  for (simPos=0; simPos < SimLen; ++simPos)
+  {
+    copy_if_above(w.tair, pData.tair, simPos, simPos, -100.0);
+    copy_if_above(w.tdew, pData.tdew, simPos, simPos, -100.0);
+    copy_if_above(w.VZ, pData.VZ, simPos, simPos, -100.0);
+    copy_if_above(w.Rhz, pData.Rhz, simPos, simPos, -100.0);
+    copy_if_above(w.prec, pData.prec, simPos, simPos, -100.0);
+    copy_if_above(w.SW, pData.SW, simPos, simPos, -100.0);
+    copy_if_above(w.LW, pData.LW, simPos, simPos, -100.0);
+    copy_if_above(w.SW_dir, pData.SW_dir, simPos, simPos, -100.0);
+    copy_if_above(w.LW_net, pData.LW_net, simPos, simPos, -1000.0);
+    copy_if_above(w.TSurfObs, pData.TSurfObs, simPos, simPos, -100.0);
+
+    copy_if_above(w.year, pData.year, simPos, simPos, -100.0);
+    copy_if_above(w.month, pData.month, simPos, simPos, -100.0);
+    copy_if_above(w.day, pData.day, simPos, simPos, -100.0);
+    copy_if_above(w.hour, pData.hour, simPos, simPos, -100.0);
+    copy_if_above(w.minute, pData.minute, simPos, simPos, -100.0);
+    copy_if_above(w.second, pData.second, simPos, simPos, -100.0);
+  }
+}
+}  // namespace
+
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Interpolates raw data for each time step in simulation
+ */
+// ----------------------------------------------------------------------
+void JsonSource::Impl::interpolate(InputData rawData,
+                 InputData& interpolatedData,
+                 std::vector<time_t> rawtime,
+                 std::vector<time_t> simtime)
+{
+  //Original data length
+  int rawLen = static_cast<int>(rawtime.size());
+  //Simulation length
+  int simLen = static_cast<int>(simtime.size());
+  int rawPos=0;
+  int simPos=0;
+  find_start_positions(rawtime, simtime, rawPos, simPos);
   //Go trouhg points until raw data ends or end of simulation
   //is reached
   while (rawPos+1<rawLen and simPos<simLen)
@@ -89,89 +313,16 @@ void JsonSource::Impl::interpolate(InputData rawData,
      {
          //If times are equal, insert raw data to interpolatd data
          //if value is not missing
-         if (rawData.tair[rawPos]>-100.0)
-            interpolatedData.tair[simPos]=rawData.tair[rawPos];
-         if (rawData.tdew[rawPos]>-100.0)
-            interpolatedData.tdew[simPos]=rawData.tdew[rawPos];
-         if (rawData.VZ[rawPos]>-100.0)
-            interpolatedData.VZ[simPos]=rawData.VZ[rawPos];
-         if (rawData.Rhz[rawPos]>-100.0)
-            interpolatedData.Rhz[simPos]=rawData.Rhz[rawPos];
-         if (rawData.prec[rawPos]>-100.0)
-            interpolatedData.prec[simPos]=rawData.prec[rawPos];
-         if (rawData.SW[rawPos]>-100.0)
-            interpolatedData.SW[simPos]=rawData.SW[rawPos];
-         if (rawData.LW[rawPos]>-100.0)
-            interpolatedData.LW[simPos]=rawData.LW[rawPos];
-         if (rawData.SW_dir[rawPos]>-100.0)
-            interpolatedData.SW_dir[simPos]=rawData.SW_dir[rawPos];
-         if (rawData.LW_net[rawPos]>-1000.0)
-            interpolatedData.LW_net[simPos]=rawData.LW_net[rawPos];
-         if (rawData.TSurfObs[rawPos]>-100.0)
-            interpolatedData.TSurfObs[simPos]=rawData.TSurfObs[rawPos];
-         if (rawData.PrecPhase[rawPos]>-100.0)
-            interpolatedData.PrecPhase[simPos]=rawData.PrecPhase[rawPos];
+         copy_raw_values(rawData, interpolatedData, rawPos, simPos);
          simPos++;
      //If simtime equals next time in rawtime, advance positin in raw data
      }else if (std::abs(simtime[simPos]-rawtime[rawPos+1])<0.01)
      {
          rawPos++;
-     }else 
+     }else
      {
          //If neither raw data point is missing, do the interpolation
-         if (rawData.tair[rawPos]>-100.0 and rawData.tair[rawPos+1]>-100.0)
-            interpolatedData.tair[simPos] = rawData.tair[rawPos]+
-                (simtime[simPos]-rawtime[rawPos])*
-                (rawData.tair[rawPos+1]-rawData.tair[rawPos])/
-                (rawtime[rawPos+1]-rawtime[rawPos]);
-         if (rawData.tdew[rawPos]>-100.0 and rawData.tdew[rawPos+1]>-100.0)
-            interpolatedData.tdew[simPos] = rawData.tdew[rawPos]+
-                (simtime[simPos]-rawtime[rawPos])*
-                (rawData.tdew[rawPos+1]-rawData.tdew[rawPos])/
-                (rawtime[rawPos+1]-rawtime[rawPos]);
-         if (rawData.VZ[rawPos]>-100.0 and rawData.VZ[rawPos+1]>-100.0)
-            interpolatedData.VZ[simPos] = rawData.VZ[rawPos]+
-                (simtime[simPos]-rawtime[rawPos])*
-                (rawData.VZ[rawPos+1]-rawData.VZ[rawPos])/
-                (rawtime[rawPos+1]-rawtime[rawPos]);
-         if (rawData.Rhz[rawPos]>-100.0 and rawData.Rhz[rawPos+1]>-100.0)
-            interpolatedData.Rhz[simPos] = rawData.Rhz[rawPos]+
-                (simtime[simPos]-rawtime[rawPos])*
-                (rawData.Rhz[rawPos+1]-rawData.Rhz[rawPos])/
-                (rawtime[rawPos+1]-rawtime[rawPos]);
-         if (rawData.prec[rawPos]>-100.0 and rawData.prec[rawPos+1]>-100.0)
-            interpolatedData.prec[simPos] = rawData.prec[rawPos]+
-                (simtime[simPos]-rawtime[rawPos])*
-                (rawData.prec[rawPos+1]-rawData.prec[rawPos])/
-                (rawtime[rawPos+1]-rawtime[rawPos]);
-         if (rawData.SW[rawPos]>-100.0 and rawData.SW[rawPos+1]>-100.0)
-            interpolatedData.SW[simPos] = rawData.SW[rawPos]+
-                (simtime[simPos]-rawtime[rawPos])*
-                (rawData.SW[rawPos+1]-rawData.SW[rawPos])/
-                (rawtime[rawPos+1]-rawtime[rawPos]);
-         if (rawData.LW[rawPos]>-100.0 and rawData.LW[rawPos+1]>-100.0)
-            interpolatedData.LW[simPos] = rawData.LW[rawPos]+
-                (simtime[simPos]-rawtime[rawPos])*
-                (rawData.LW[rawPos+1]-rawData.LW[rawPos])/
-                (rawtime[rawPos+1]-rawtime[rawPos]);
-         if (rawData.SW_dir[rawPos]>-100.0 and rawData.SW_dir[rawPos+1]>-100.0)
-            interpolatedData.SW_dir[simPos] = rawData.SW_dir[rawPos]+
-                (simtime[simPos]-rawtime[rawPos])*
-                (rawData.SW_dir[rawPos+1]-rawData.SW_dir[rawPos])/
-                (rawtime[rawPos+1]-rawtime[rawPos]);
-         if (rawData.LW_net[rawPos]>-1000.0 and rawData.LW_net[rawPos+1]>-1000.0)
-            interpolatedData.LW_net[simPos] = rawData.LW_net[rawPos]+
-                (simtime[simPos]-rawtime[rawPos])*
-                (rawData.LW_net[rawPos+1]-rawData.LW_net[rawPos])/
-                (rawtime[rawPos+1]-rawtime[rawPos]);
-         if (rawData.TSurfObs[rawPos]>-100.0 and rawData.TSurfObs[rawPos+1]>-100.0)
-            interpolatedData.TSurfObs[simPos] = rawData.TSurfObs[rawPos]+
-                (simtime[simPos]-rawtime[rawPos])*
-                (rawData.TSurfObs[rawPos+1]-rawData.TSurfObs[rawPos])/
-                (rawtime[rawPos+1]-rawtime[rawPos]);
-         if (rawData.PrecPhase[rawPos+1]>-100.0) 
-            interpolatedData.PrecPhase[simPos] = rawData.PrecPhase[rawPos+1];
-
+         interpolate_raw_values(rawData, interpolatedData, rawPos, simPos, rawtime, simtime);
          simPos++;
      }
   }
@@ -195,11 +346,9 @@ JsonSource::Impl::Impl(const time_t& /*pWallClock*/,
   std::string variableNames[Nvar]={"Temperature 2m","Humidity","DewPoint","WindSpeed",
                 "PrecipitationForm", "Precipitation","RadiationNetSurfaceLW",
                 "RadiationLW","RadiationGlobal","RadiationDirectSW","RoadTemperature"};
-  int simPos=0;
   //Initialize vector containing simulation times
   std::vector<time_t> simTime;
   auto t = pStartTime; //start time
-  struct tm *tt = nullptr;
   for (int i = 0; i<SimLen; i++)
   {
     simTime.emplace_back(t);
@@ -240,76 +389,13 @@ JsonSource::Impl::Impl(const time_t& /*pWallClock*/,
     //Initialize input data class
     InputData rawData{dataLen};
     //vecotr for input data times
-    std::vector<time_t> rawtime;
-    //Read times to vector from the data
-    for (int index=0; index<dataLen; index++)
-    {
-       struct tm timeStruct{};
-       std::string timeString=dataArray[index].asString();
-       strptime(timeString.c_str(),"%Y-%m-%d %H:%M",&timeStruct);
-       timeStruct.tm_sec=0;
-       timeStruct.tm_isdst=-1;
-       rawtime.push_back(mktime(&timeStruct));
-    }
+    std::vector<time_t> rawtime = read_raw_times(dataArray, dataLen);
     //read data for each variables
-    for (int var=0; var<Nvar; var++)
-    {
-       Json::Value nulljson;
-       //Get data array from json
-       auto dataArray=j.get(variableNames[var],nulljson);
-       if (!dataArray.isNull())
-       { 
-          //Reach data for each time step
-          for (int index=0; index<dataLen; index++)
-          {
-              double value=dataArray[index].asDouble();
-              if (var==0)
-                 rawData.tair[index]=value;
-              if (var==1)
-                 rawData.Rhz[index]=value;
-              if (var==2)
-                 rawData.tdew[index]=value;
-              if (var==3)
-                 rawData.VZ[index]=value;
-              if (var==4)
-                 rawData.PrecPhase[index]=value;
-              if (var==5)
-                 rawData.prec[index]=value;
-              if (var==6)
-                 rawData.LW_net[index]=value;
-              if (var==7)
-                 rawData.LW[index]=value;
-              if (var==8)
-                 rawData.SW[index]=value;
-              if (var==9)
-                 rawData.SW_dir[index]=value;
-              if (var==10)
-                 rawData.TSurfObs[index]=value;
-          }
-       }
-     }
+    read_raw_values(j, rawData, dataLen, variableNames, Nvar);
     //Calculate tdew from rh or other way around if only one was in the input data
-    for (int index=0; index<dataLen; index++)
-    {
-        if (rawData.tdew[index]<-100 and rawData.Rhz[index]>-100 and rawData.tair[index]>-100)
-           rawData.tdew[index] = CalcTdewOrRH(rawData.tair[index], -9999.9, rawData.Rhz[index]);
-        if (rawData.Rhz[index]<-100 and rawData.tdew[index]>-100 and rawData.tair[index]>-100)
-           rawData.Rhz[index] = CalcTdewOrRH(rawData.tair[index], rawData.tdew[index], -9999.9);
-    }
+    calculate_humidity(rawData, dataLen);
     //Fill the time arrays in interpolated data
-    for (simPos=0; simPos < SimLen; ++simPos)
-    {
-        struct ::tm ttBuffer{};  // localtime_r is thread safe
-        tt=localtime_r(&simTime[simPos], &ttBuffer);
-        tt->tm_year+=1900;
-        tt->tm_mon+=1;
-        interpolatedData.year[simPos]=tt->tm_year;
-        interpolatedData.month[simPos]=tt->tm_mon;
-        interpolatedData.day[simPos]=tt->tm_mday;
-        interpolatedData.hour[simPos]=tt->tm_hour;
-        interpolatedData.minute[simPos]=tt->tm_min;
-        interpolatedData.second[simPos]=tt->tm_sec;
-    }
+    fill_simulation_times(interpolatedData, simTime, SimLen);
     //Do interpolation from original data times to simulation times
     interpolate(rawData,interpolatedData,rawtime,simTime);
     //Add data to vector
@@ -330,46 +416,7 @@ void JsonSource::Impl::GetWeather(InputData& pData,int pointID) const
   if (index!=pointIDs.end())
   {
      int statPos=index-pointIDs.begin();//This gives the right index for point
-     //Lenght of simulation
-     int SimLen = static_cast<int>(weatherData[statPos].tair.size()); 
-     int simPos=0; //Index in data
-     //Add data to pData point by point if not missing
-     for (simPos=0; simPos < SimLen; ++simPos)
-     {
-        if (weatherData[statPos].tair[simPos]>-100.0)
-           pData.tair[simPos]=weatherData[statPos].tair[simPos];
-        if (weatherData[statPos].tdew[simPos]>-100.0)
-           pData.tdew[simPos]=weatherData[statPos].tdew[simPos];
-        if (weatherData[statPos].VZ[simPos]>-100.0)
-           pData.VZ[simPos]=weatherData[statPos].VZ[simPos];
-        if (weatherData[statPos].Rhz[simPos]>-100.0)
-           pData.Rhz[simPos]=weatherData[statPos].Rhz[simPos];
-        if (weatherData[statPos].prec[simPos]>-100.0)
-           pData.prec[simPos]=weatherData[statPos].prec[simPos];
-        if (weatherData[statPos].SW[simPos]>-100.0)
-           pData.SW[simPos]=weatherData[statPos].SW[simPos];
-        if (weatherData[statPos].LW[simPos]>-100.0)
-           pData.LW[simPos]=weatherData[statPos].LW[simPos];
-        if (weatherData[statPos].SW_dir[simPos]>-100.0)
-           pData.SW_dir[simPos]=weatherData[statPos].SW_dir[simPos];
-        if (weatherData[statPos].LW_net[simPos]>-1000.0)
-           pData.LW_net[simPos]=weatherData[statPos].LW_net[simPos];
-        if (weatherData[statPos].TSurfObs[simPos]>-100.0)
-           pData.TSurfObs[simPos]=weatherData[statPos].TSurfObs[simPos];
-   
-        if (weatherData[statPos].year[simPos]>-100.0)
-           pData.year[simPos]=weatherData[statPos].year[simPos];
-        if (weatherData[statPos].month[simPos]>-100.0)
-           pData.month[simPos]=weatherData[statPos].month[simPos];
-        if (weatherData[statPos].day[simPos]>-100.0)
-           pData.day[simPos]=weatherData[statPos].day[simPos];
-        if (weatherData[statPos].hour[simPos]>-100.0)
-           pData.hour[simPos]=weatherData[statPos].hour[simPos];
-        if (weatherData[statPos].minute[simPos]>-100.0)
-           pData.minute[simPos]=weatherData[statPos].minute[simPos];
-        if (weatherData[statPos].second[simPos]>-100.0)
-           pData.second[simPos]=weatherData[statPos].second[simPos];
-     }
+     copy_station_values(weatherData[statPos], pData);
   }
 }
 // ----------------------------------------------------------------------
