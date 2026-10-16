@@ -62,11 +62,8 @@ class QueryDataSource::Impl
                    Getter get_value,
                    Converter convert) const;
 
-  template <typename Getter, typename TdewGetter>
-  void extract_timeseries(NFmiMultiQueryInfo& q,
-                          Observations& d,
-                          Getter get_value,
-                          TdewGetter get_tdew_value) const;
+  template <typename Getter>
+  void extract_timeseries(NFmiMultiQueryInfo& q, Observations& d, Getter get_value) const;
 
   std::optional<std::size_t> find_time_position(long tcmp, std::size_t size) const;
   void interpolate_weather(Weather& data,
@@ -558,16 +555,13 @@ void QueryDataSource::Impl::store_param(NFmiMultiQueryInfo& q,
 // ----------------------------------------------------------------------
 /*!
  * \brief Extract the parameter values using the given value getter
- *
- * The dewpoint calculated from temperature and humidity uses its own getter.
  */
 // ----------------------------------------------------------------------
 
-template <typename Getter, typename TdewGetter>
+template <typename Getter>
 void QueryDataSource::Impl::extract_timeseries(NFmiMultiQueryInfo& q,
                                                Observations& d,
-                                               Getter get_value,
-                                               TdewGetter get_tdew_value) const
+                                               Getter get_value) const
 {
   // Then handle one parameter at a time for speed.
 
@@ -601,9 +595,9 @@ void QueryDataSource::Impl::extract_timeseries(NFmiMultiQueryInfo& q,
     for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
     {
       q.Param(kFmiTemperature);
-      auto t = get_tdew_value();
+      auto t = get_value();
       q.Param(kFmiHumidity);
-      auto rh = get_tdew_value();
+      auto rh = get_value();
       if (t != kFloatMissing && rh != kFloatMissing)
         d[idx - mFirstTimeIndex].tdew2m = CalcTdewOrRH(t, MISSING, rh);
     }
@@ -649,8 +643,7 @@ void QueryDataSource::Impl::update_pointdata_timeseries(const NFmiPoint& pLatLon
   auto& d = data();
   init_observation_times(d);
 
-  const auto get_value = [&q]() { return q.FloatValue(); };
-  extract_timeseries(q, d, get_value, get_value);
+  extract_timeseries(q, d, [&q]() { return q.FloatValue(); });
  // std::ofstream outputFile("/smartmet/data/virve/txt/atm_forecast.txt",std::ios::app);
  // if (uses_param(kFmiTemperature) && q.Param(kFmiTemperature)){
  //    outputFile<<pLatLon.Y()<<" "<<pLatLon.X()<<std::endl;
@@ -694,9 +687,7 @@ void QueryDataSource::Impl::update_griddata_timeseries(const NFmiPoint& pLatLon)
   auto& d = data();
   init_observation_times(d);
 
-  extract_timeseries(
-      q, d, [&q, &loc_cache]() { return q.CachedInterpolation(loc_cache); },
-      [&q]() { return q.FloatValue(); });
+  extract_timeseries(q, d, [&q, &loc_cache]() { return q.CachedInterpolation(loc_cache); });
 }
 
 // ----------------------------------------------------------------------
