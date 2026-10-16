@@ -28,6 +28,7 @@ using DataMap = std::map<int, Observations>;  // observations for each station
 // Last searched location and the data for it is cached for speed
 thread_local std::optional<NFmiPoint> myLatLon;
 thread_local DataMap::const_iterator myData;
+thread_local const void* myOwner = nullptr;  // the source the cached data belongs to
 
 std::string format_smartmet_time(NFmiMetTime pTime, int pTimeMargin)
 {
@@ -930,19 +931,26 @@ void SmartMetSource::Impl::RemoveOutliers()
 
 const Observations* SmartMetSource::Impl::nearest_observations(const NFmiPoint& pLatLon)
 {
-  if (!myLatLon || *myLatLon != pLatLon)
+  if (!myLatLon || *myLatLon != pLatLon || myOwner != this)
   {
     // Update new active location
     myLatLon = pLatLon;
+    myOwner = this;
     // No station near enough?
     auto nearest_station =
         mStationTree.nearest(Station{pLatLon.X(), pLatLon.Y()}, Station::ChordLength(mRadius));
     if (!nearest_station)
+    {
+      myLatLon.reset();
       return nullptr;
+    }
     // No data for the station?!?!
     myData = mData.find(nearest_station->ID());
     if (myData == mData.end())
+    {
+      myLatLon.reset();
       return nullptr;
+    }
   }
   return &myData->second;
 }
