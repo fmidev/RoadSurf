@@ -5,6 +5,7 @@
 #include <smartmet/newbase/NFmiStringTools.h>
 #include <cmath>
 #include <string>
+#include <utility>
 #include <vector>
 #include <iostream>
 #include <iomanip>
@@ -32,7 +33,7 @@ class QueryDataSource::Impl
   Impl(const NFmiMetTime& pWallClock,
        const NFmiMetTime& pStartTime,
        const NFmiMetTime& pEndTime,
-       const Json::Value& pSource);
+       Json::Value  pSource);
 
   void GetWeather(InputData& pData, const SimulationTimes& pTimes, const NFmiPoint& pLatLon) const;
 
@@ -179,8 +180,8 @@ void QueryDataSource::Impl::error(const std::string& pMessage) const
 QueryDataSource::Impl::Impl(const NFmiMetTime& pWallClock,
                             const NFmiMetTime& pStartTime,
                             const NFmiMetTime& pEndTime,
-                            const Json::Value& pSource)
-    : mJson(pSource), mWallClock(pWallClock), mStartTime(pStartTime), mEndTime(pEndTime)
+                            Json::Value  pSource)
+    : mJson(std::move(pSource)), mWallClock(pWallClock), mStartTime(pStartTime), mEndTime(pEndTime)
 {
   // Read settings
   Json::Value nulljson;

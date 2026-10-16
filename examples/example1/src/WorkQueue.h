@@ -27,7 +27,7 @@ class WorkQueue : std::mutex, std::condition_variable
       for (unsigned int count{}; count < concurrency; ++count)
         threads.emplace_back(static_cast<void (WorkQueue::*)(Function)>(&WorkQueue::consume),
                              this,
-                             std::forward<Function>(function));
+                             function);
     }
     catch (...)
     {
@@ -72,7 +72,7 @@ class WorkQueue : std::mutex, std::condition_variable
     }
     catch (...)
     {
-      std::runtime_error("Operation failed!");
+      // Called by the destructor: exceptions must not escape
     }
   }
 
@@ -124,7 +124,7 @@ class WorkQueue : std::mutex, std::condition_variable
     }
     catch (...)
     {
-      std::runtime_error("Operation failed!");
+      // A thread function: exceptions must not escape
     }
   }
 };

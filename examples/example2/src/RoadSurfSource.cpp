@@ -62,7 +62,7 @@ class RoadSurfSource::Impl
   std::vector<double> grid_size;
 
   NFmiPoint mLatLon;
-  double mRadius;
+  double mRadius{2.0};
   void check_params();
 
   static double interpolate(const Observations& pObservations,
@@ -343,7 +343,7 @@ RoadSurfSource::Impl::Impl(const NFmiMetTime& pWallClock,
                            const NFmiMetTime& pEndTime,
                            const Json::Value& pSource,
                            const Json::Value& pConfig)
-    : mWallClock(pWallClock), mStartTime(pStartTime), mEndTime(pEndTime), mRadius(2.0)
+    : mWallClock(pWallClock), mStartTime(pStartTime), mEndTime(pEndTime)
 {
 #if 0
   Json::StyledWriter writer;
