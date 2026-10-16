@@ -8,6 +8,36 @@
 #include <string>
 #include <sstream>
 
+namespace
+{
+// Parse a line of the local horizon file. The identifier, name and coordinates are left
+// unchanged if the line does not contain them.
+std::vector<double> parse_local_horizon_line(
+    const std::string& line, int& id, std::string& name, double& lat, double& lon)
+{
+  std::string value;
+  std::istringstream iss(line);
+  std::vector<double> local_horizons;
+  int l = 1;
+  //Read line
+  while (iss >> value)
+  {
+    if (l == 1) //pointID
+      id = std::stoi(value);
+    else if (l == 2) //name
+      name = value;
+    else if (l == 3) //latitude
+      lat = std::stod(value);
+    else if (l == 4)  //longitude
+      lon = std::stod(value);
+    else //local horizon
+      local_horizons.push_back(std::stod(value));
+    l++;
+  }
+  return local_horizons;
+}
+}  // namespace
+
 //------------------------------------------------------------------------
 //
 // Read sky view factors and local horizon angles
@@ -69,64 +99,56 @@ SkyView::SkyView(const Json::Value& pJson )
     if (!in)
       throw std::runtime_error("Failed to open '" + local_horizon_file + "'");
     std::string line;
-    std::string value;
     //Read in data
     while (std::getline(in, line))
     {
-      std::istringstream iss(line);
-      std::vector<double> local_horizons;
-      int l = 1;
-      //Read line
-      while (iss >> value)
-      {
-        if (l == 1) //pointID
-          id = std::stoi(value);
-        else if (l == 2) //name
-          name = value;
-        else if (l == 3) //latitude
-          lat = std::stod(value);
-        else if (l == 4)  //longitude
-          lon = std::stod(value);
-        else //local horizon
-          local_horizons.push_back(std::stod(value));
-        l++;
-      }
-      //If sky view factors are already saved to mdata
-      if (!mData.empty())
-      {
-	//Find the place in mData with same pointID
-        std::map<int, SkyVariables>::iterator it;
-        it = mData.find(id);
-	//If found, set local horizons to madata
-        if (it != mData.end())
-        {
-          it->second.local_horizons = local_horizons;
-        }
-        else
-        {
-	  //Else give sky view factor a default value and save
-	  //local horizon angles
-          mStationTree.insert(Station(lon, lat, id));
-          SkyVariables skyVar;
-          skyVar.local_horizons = local_horizons;
-          skyVar.sky_view = 1.0;
-          mData.insert(std::make_pair(id, skyVar));
-        }
-      }
-      else
-      {
-	//If mdata is empty give sky view factr a default value
-	//and save local horizon angels
-        mStationTree.insert(Station(lon, lat, id));
-        SkyVariables skyVar;
-        skyVar.sky_view = 1.0;
-        skyVar.local_horizons = local_horizons;
-        mData.insert(std::make_pair(id, skyVar));
-      }
+      std::vector<double> local_horizons = parse_local_horizon_line(line, id, name, lat, lon);
+      add_local_horizons(id, lat, lon, local_horizons);
     }
   }
 
 }
+
+// Store the local horizons of a station
+void SkyView::add_local_horizons(int id,
+                                 double lat,
+                                 double lon,
+                                 const std::vector<double>& local_horizons)
+{
+  //If sky view factors are already saved to mdata
+  if (!mData.empty())
+  {
+	//Find the place in mData with same pointID
+    std::map<int, SkyVariables>::iterator it;
+    it = mData.find(id);
+	//If found, set local horizons to madata
+    if (it != mData.end())
+    {
+      it->second.local_horizons = local_horizons;
+    }
+    else
+    {
+	  //Else give sky view factor a default value and save
+	  //local horizon angles
+      mStationTree.insert(Station(lon, lat, id));
+      SkyVariables skyVar;
+      skyVar.local_horizons = local_horizons;
+      skyVar.sky_view = 1.0;
+      mData.insert(std::make_pair(id, skyVar));
+    }
+  }
+  else
+  {
+	//If mdata is empty give sky view factr a default value
+	//and save local horizon angels
+    mStationTree.insert(Station(lon, lat, id));
+    SkyVariables skyVar;
+    skyVar.sky_view = 1.0;
+    skyVar.local_horizons = local_horizons;
+    mData.insert(std::make_pair(id, skyVar));
+  }
+}
+
 //Get sky view factor and local horizon angles for point
 void SkyView::GetSkyVariables(LocalParameters& lParameters,
                               InputData& pData,

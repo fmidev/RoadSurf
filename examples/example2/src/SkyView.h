@@ -17,6 +17,11 @@ class SkyView
   void GetSkyVariables(LocalParameters& parameters, InputData& pData, const NFmiPoint& pLatLon);
 
  private:
+  void add_local_horizons(int id,
+                          double lat,
+                          double lon,
+                          const std::vector<double>& local_horizons);
+
   using Station = Fmi::NearTreeLatLon<int>;
   using StationTree = Fmi::NearTree<Station, Fmi::NearTreeLatLonDistance<Station>>;
   using DataMap = std::map<int, SkyVariables>;
