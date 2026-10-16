@@ -23,6 +23,112 @@ namespace
 using Observations = std::vector<Weather>;    // Observations sorted by time
 using DataMap = std::map<int, Observations>;  // observations for each point
 
+// The parameter number of a PARAMETRI line, or the previous number if there is none
+int parse_parameter_number(const std::string& line, int pnum)
+{
+  // string stream goes through words in line
+  std::string temp;
+  std::stringstream words;
+  words << line;
+  while (!words.eof())
+  {
+    words >> temp;
+    // Check if integer
+    if (std::stringstream(temp) >> pnum)
+      break;
+  }
+  return pnum;
+}
+
+// True if the first word of the line is a number
+bool starts_with_number(const std::string& line)
+{
+  // first word in line
+  std::string number_string = line.substr(0, line.find(' '));
+
+  // check if first parameter in line is float
+  try
+  {
+    static_cast<void>(std::stod(number_string));
+    return true;
+  }
+  catch (std::exception&)
+  {
+    return false;
+  }
+}
+
+// Store a valid value of the given parameter number
+void store_obs_value(Weather& w, int pnum, double value)
+{
+  if (pnum == 21)
+    w.vz = value;
+  if (pnum == 4)
+    w.t2m = value;
+  if (pnum == 13)
+    w.rh2m = value;
+  if (pnum == 317)
+    w.swdn = value;
+  if (pnum == 315)
+    w.lwdn = value;
+  if (pnum == 353)
+    w.simuprec = value;
+  if (pnum == 354)
+    w.simuprec = value / 3;  // 3 hour precipitation
+  if (pnum == 5)
+    w.troad = value;
+  if (pnum == 57)
+    w.phase = value;
+}
+
+// The member of the weather struct for the parameter, or nullptr if there is none
+double Weather::*weather_member(const std::string& p)
+{
+  if (p == "roadtemperature")
+    return &Weather::troad;
+  if (p == "airtemperature")
+    return &Weather::t2m;
+  if (p == "dewpoint")
+    return &Weather::tdew2m;
+  if (p == "humidity")
+    return &Weather::rh2m;
+  if (p == "windspeed")
+    return &Weather::vz;
+  if (p == "longwaveradiation")
+    return &Weather::lwdn;
+  if (p == "shortwaveradiation")
+    return &Weather::swdn;
+  if (p == "precipitation" || p == "precipitationrate")
+    return &Weather::simuprec;
+  if (p == "precipitationform")
+    return &Weather::phase;
+  return nullptr;
+}
+
+// Find first position where t >= time
+unsigned int first_position_at_or_after(const Observations& obs, const Fmi::DateTime& pt)
+{
+  unsigned int pos = 0;
+  for (pos = 0; pos < obs.size(); ++pos)
+    if (obs[pos].date.PosixTime() >= pt)
+      break;
+  return pos;
+}
+
+// Store the valid values of the weather into the input data at the given position
+void store_weather(InputData& pData, std::size_t i, const Weather& data)
+{
+  set_if_valid(pData.tdew[i], data.tdew2m);
+
+  set_if_valid(pData.TSurfObs[i], data.troad);
+  set_if_valid(pData.tair[i], data.t2m);
+  set_if_valid(pData.Rhz[i], data.rh2m);
+  set_if_valid(pData.VZ[i], data.vz);
+  set_if_valid(pData.LW[i], data.lwdn);
+  set_if_valid(pData.SW[i], data.swdn);
+  set_if_valid(pData.prec[i], data.simuprec);
+  set_if_valid(pData.PrecPhase[i], data.phase);
+}
 }  // namespace
 // ----------------------------------------------------------------------
 /*!
@@ -72,11 +178,99 @@ class RoadSurfSource::Impl
                             double Weather::*pPtr);
 
   void read_file(const std::string& mFilename);
+  void parse_timestamp_line(const std::string& line);
+  void read_data_row(const std::string& line, int pnum, int dataRow, int& pointNum);
   void read_obs_list(const std::string& mFilename, const std::string& path);
 
 };  // class AsciiSource::Impl
 
 RoadSurfSource::~RoadSurfSource() = default;
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse the time of an AIKA line and advance the timestep if the time changes
+ */
+// ----------------------------------------------------------------------
+
+void RoadSurfSource::Impl::parse_timestamp_line(const std::string& line)
+{
+  // Parse timestamp
+  std::string timestamp = line.substr(5, 12);
+  int yy = std::stoi(timestamp.substr(0, 4));
+  int mm = std::stoi(timestamp.substr(4, 2));
+  int dd = std::stoi(timestamp.substr(6, 2));
+  int hh = std::stoi(timestamp.substr(8, 2));
+  int mi = std::stoi(timestamp.substr(10, 2));
+  int ss = 0;  // seconds
+  // create time variable
+  time = NFmiMetTime(yy, mm, dd, hh, mi, ss);
+  // if different than last timesamp,
+  if (lastTime != time)
+  {
+    is_newTimeStep = true;
+    timeStep++;
+  }
+  else
+  {
+    is_newTimeStep = false;
+  }
+  lastTime = time;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Read a row of grid values
+ */
+// ----------------------------------------------------------------------
+
+void RoadSurfSource::Impl::read_data_row(const std::string& line,
+                                         int pnum,
+                                         int dataRow,
+                                         int& pointNum)
+{
+  int dataColumn = 0;  // used to calculate lon
+
+  // isstringstream goes trough line word by word
+  std::istringstream iss(line);
+  std::string value_string;
+  while (iss >> value_string)
+  {
+    // convert string to double
+    auto value = std::stod(value_string);
+
+    int id = pointNum;
+    // make map with location id as key and Observation class as value
+    // get iterator to the element
+    auto last_pos = mData.find(id);
+    // if key was not in the map yet, insert it there
+    if (last_pos == mData.end())
+    {
+      auto pos_bool = mData.insert(std::make_pair(id, Observations()));
+      last_pos = pos_bool.first;
+      if (grid_coord.empty())
+        throw std::runtime_error("Grid not set");
+
+      double lat = grid_coord[1] + dataRow * (grid_coord[3] - grid_coord[1]) / grid_size[1];
+      double lon = grid_coord[0] + dataColumn * (grid_coord[2] - grid_coord[0]) / grid_size[0];
+      mStationTree.insert(Station{lon, lat, id});
+    }
+    // if new timestep, generate Weather class where to insert data
+    if (is_newTimeStep)
+    {
+      Weather data{time};
+      last_pos->second.push_back(data);
+    }
+    // if value is not missing, store it to the corresponding paramter slot
+    if (value > -9999)
+    {
+      // get the observation class object for current time and location
+      auto& obs = last_pos->second;
+      store_obs_value(obs[timeStep], pnum, value);
+    }
+    dataColumn++;
+    pointNum++;
+  }
+}
 
 // ----------------------------------------------------------------------
 /*!
@@ -100,18 +294,10 @@ void RoadSurfSource::Impl::read_file(const std::string& mFilename)
 
   // Data rows: yy mm dd hh tair rh vz rr1h rform srad lrad tsurf
 
-  int yy = 0;
-  int mm = 0;
-  int dd = 0;
-  int hh = 0;
-  int mi = 0;
-  int ss = 0;
   int pnum = 0;
   int dataRow = 0;
-  int dataColumn = 0;
   int rownum = 1;
   int pointNum = 0;
-  auto last_pos = mData.end();  // Pointer to Observation class in datamap
 
   // Go trough rows until the end of file
   while (in.good())
@@ -121,126 +307,22 @@ void RoadSurfSource::Impl::read_file(const std::string& mFilename)
     // if timestamp row
     if (line.rfind("AIKA:", 0) == 0)
     {
-      // Parse timestamp
-      std::string timestamp = line.substr(5, 12);
-      yy = std::stoi(timestamp.substr(0, 4));
-      mm = std::stoi(timestamp.substr(4, 2));
-      dd = std::stoi(timestamp.substr(6, 2));
-      hh = std::stoi(timestamp.substr(8, 2));
-      mi = std::stoi(timestamp.substr(10, 2));
-      ss = 0;          // seconds
-      dataRow = 0;     // used to calculate lat
-      dataColumn = 0;  // used to calculate lon
+      parse_timestamp_line(line);
+      dataRow = 0;   // used to calculate lat
       pointNum = 0;
-      // create time variable
-      time = NFmiMetTime(yy, mm, dd, hh, mi, ss);
-      // if different than last timesamp,
-      if (lastTime != time)
-      {
-        is_newTimeStep = true;
-        timeStep++;
-      }
-      else
-      {
-        is_newTimeStep = false;
-      }
-      lastTime = time;
     }
     // Get parameter number
     else if (line.rfind("PARAMETRI:", 0) == 0)
     {
-      // string stream goes through words in line
-      std::string temp;
-      std::stringstream words;
-      words << line;
-      while (!words.eof())
-      {
-        words >> temp;
-        // Check if integer
-        if (std::stringstream(temp) >> pnum)
-          break;
-      }
+      pnum = parse_parameter_number(line, pnum);
     }
     else
     {
-      // first word in line
-      std::string number_string = line.substr(0, line.find(' '));
-      bool is_valid = false;
-
-      // check if first parameter in line is float
-      try
-      {
-        static_cast<void>(std::stod(number_string));
-        is_valid = true;
-      }
-      catch (std::exception&)
-      {
-        is_valid = false;
-      }
       // read data if float was found
-      if (is_valid)
+      if (starts_with_number(line))
       {
-        // isstringstream goes trough line word by word
-        std::istringstream iss(line);
-        std::string value_string;
-        while (iss >> value_string)
-        {
-          // convert string to double
-          auto value = std::stod(value_string);
-
-          int id = pointNum;
-          // make map with location id as key and Observation class as value
-          // get iterator to the element
-          last_pos = mData.find(id);
-          // if key was not in the map yet, insert it there
-          if (last_pos == mData.end())
-          {
-            auto pos_bool = mData.insert(std::make_pair(id, Observations()));
-            last_pos = pos_bool.first;
-            if (grid_coord.empty())
-              throw std::runtime_error("Grid not set");
-
-            double lat = grid_coord[1] + dataRow * (grid_coord[3] - grid_coord[1]) / grid_size[1];
-            double lon =
-                grid_coord[0] + dataColumn * (grid_coord[2] - grid_coord[0]) / grid_size[0];
-            mStationTree.insert(Station{lon, lat, id});
-          }
-          // if new timestep, generate Weather class where to insert data
-          if (is_newTimeStep)
-          {
-            Weather data{time};
-            last_pos->second.push_back(data);
-          }
-          // if value is not missing, store it to the corresponding paramter slot
-          if (value > -9999)
-          {
-            // get the observation class object for current time and location
-            auto& obs = last_pos->second;
-
-            if (pnum == 21)
-              obs[timeStep].vz = value;
-            if (pnum == 4)
-              obs[timeStep].t2m = value;
-            if (pnum == 13)
-              obs[timeStep].rh2m = value;
-            if (pnum == 317)
-              obs[timeStep].swdn = value;
-            if (pnum == 315)
-              obs[timeStep].lwdn = value;
-            if (pnum == 353)
-              obs[timeStep].simuprec = value;
-            if (pnum == 354)
-              obs[timeStep].simuprec = value / 3;  // 3 hour precipitation
-            if (pnum == 5)
-              obs[timeStep].troad = value;
-            if (pnum == 57)
-              obs[timeStep].phase = value;
-          }
-          dataColumn++;
-          pointNum++;
-        }
+        read_data_row(line, pnum, dataRow, pointNum);
         dataRow++;
-        dataColumn = 0;
       }
       rownum++;
     }
@@ -532,9 +614,6 @@ void RoadSurfSource::Impl::GetWeather(InputData& pData,
   const auto& obs = myData->second;
   if (obs.empty())
     return;
-  for (unsigned int pos = 0; pos < obs.size(); ++pos)
-  {
-  }
   // Process all times
   for (std::size_t i = 0; i < pTimes.size(); i++)
   {
@@ -548,37 +627,14 @@ void RoadSurfSource::Impl::GetWeather(InputData& pData,
     // Find first position where t >= time. This is guaranteed to succeed
     // after the above tests.
 
-    unsigned int pos = 0;
-    for (pos = 0; pos < obs.size(); ++pos)
-      if (obs[pos].date.PosixTime() >= pt)
-        break;
+    unsigned int pos = first_position_at_or_after(obs, pt);
     const int max_time_gap = 180;
-
-    double Weather::*ptr = nullptr;  // pointer to double member of struct
 
     Weather data{pt};
 
     for (const auto& p : mParams)
     {
-      if (p == "roadtemperature")
-        ptr = &Weather::troad;
-      else if (p == "airtemperature")
-        ptr = &Weather::t2m;
-      else if (p == "dewpoint")
-        ptr = &Weather::tdew2m;
-      else if (p == "humidity")
-        ptr = &Weather::rh2m;
-      else if (p == "windspeed")
-        ptr = &Weather::vz;
-      else if (p == "longwaveradiation")
-        ptr = &Weather::lwdn;
-      else if (p == "shortwaveradiation")
-        ptr = &Weather::swdn;
-      else if (p == "precipitation" || p == "precipitationrate")
-        ptr = &Weather::simuprec;
-      else if (p == "precipitationform")
-        ptr = &Weather::phase;
-
+      double Weather::*ptr = weather_member(p);  // pointer to double member of struct
       if (ptr)
         data.*ptr = interpolate(obs, pt, pos, max_time_gap, ptr);
     }
@@ -591,25 +647,7 @@ void RoadSurfSource::Impl::GetWeather(InputData& pData,
     if (data.simuprec > 100)
       data.simuprec = MISSING;
 
-    if (!is_missing(data.tdew2m))
-      pData.tdew[i] = data.tdew2m;
-
-    if (!is_missing(data.troad))
-      pData.TSurfObs[i] = data.troad;
-    if (!is_missing(data.t2m))
-      pData.tair[i] = data.t2m;
-    if (!is_missing(data.rh2m))
-      pData.Rhz[i] = data.rh2m;
-    if (!is_missing(data.vz))
-      pData.VZ[i] = data.vz;
-    if (!is_missing(data.lwdn))
-      pData.LW[i] = data.lwdn;
-    if (!is_missing(data.swdn))
-      pData.SW[i] = data.swdn;
-    if (!is_missing(data.simuprec))
-      pData.prec[i] = data.simuprec;
-    if (!is_missing(data.phase))
-      pData.PrecPhase[i] = data.phase;
+    store_weather(pData, i, data);
   }
 }
 
