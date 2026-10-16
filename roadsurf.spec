@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 1.7.2
+Version: 1.7.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -53,6 +53,12 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
+* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 1.7.3-1.fmi
+- Examples use std::abs: the integer abs truncated floating point differences in the spike tests
+- example1 WorkQueue gives every worker thread a copy of the work function, later threads
+  received a moved-from function
+- Fixed compiler warnings and clang-tidy findings (unused code, unreachable code, empty statements, member initialization, parameter passing, noexcept), no functional changes
+
 * Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 1.7.2-1.fmi
 - Fixed clang-tidy correctness findings (member initialization, rule of five, printf formats, dead stores)
 - example1 uses the nearest station's sky view data, and example2 adds horizon-only stations to its station tree
