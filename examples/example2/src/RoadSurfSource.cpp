@@ -165,7 +165,7 @@ void RoadSurfSource::Impl::read_file(const std::string& mFilename)
     {
       // first word in line
       std::string number_string = line.substr(0, line.find(' '));
-      bool is_valid;
+      bool is_valid = false;
 
       // check if first parameter in line is float
       try
@@ -464,7 +464,7 @@ double RoadSurfSource::Impl::interpolate(const Observations& pObservations,
 
   // Search for first value after current time with valid value
 
-  unsigned int pos2;
+  unsigned int pos2 = 0;
   double value2 = MISSING;
   for (pos2 = pPos; pos2 < pObservations.size(); ++pos2)
   {
@@ -478,7 +478,7 @@ double RoadSurfSource::Impl::interpolate(const Observations& pObservations,
 
   // Search for first value before current time with valid value
 
-  unsigned int pos1;
+  unsigned int pos1 = 0;
   double value1 = MISSING;
   for (pos1 = pPos - 1;; --pos1)
   {
@@ -548,7 +548,7 @@ void RoadSurfSource::Impl::GetWeather(InputData& pData,
     // Find first position where t >= time. This is guaranteed to succeed
     // after the above tests.
 
-    unsigned int pos;
+    unsigned int pos = 0;
     for (pos = 0; pos < obs.size(); ++pos)
       if (obs[pos].date.PosixTime() >= pt)
         break;

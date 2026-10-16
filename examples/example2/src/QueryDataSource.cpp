@@ -1,5 +1,6 @@
 #include "QueryDataSource.h"
 #include "MeteorologyTools.h"
+#include <cmath>
 #include <smartmet/newbase/NFmiMultiQueryInfo.h>
 #include <smartmet/newbase/NFmiParameterName.h>
 #include <smartmet/newbase/NFmiStringTools.h>
@@ -350,7 +351,7 @@ double QueryDataSource::Impl::interpolate(const Observations& pObservations,
 
   // Search for first value after current time with valid value
 
-  unsigned int pos2;
+  unsigned int pos2 = 0;
   double value2 = MISSING;
   for (pos2 = pPos; pos2 < pObservations.size(); ++pos2)
   {
@@ -364,7 +365,7 @@ double QueryDataSource::Impl::interpolate(const Observations& pObservations,
 
   // Search for first value before current time with valid value
 
-  unsigned int pos1;
+  unsigned int pos1 = 0;
   double value1 = MISSING;
   for (pos1 = pPos - 1;; --pos1)
   {
@@ -464,7 +465,7 @@ void QueryDataSource::Impl::update_pointdata_timeseries(const NFmiPoint& pLatLon
   // Then handle one parameter at a time for speed. Should be rewritten when C++14 lambdas
   // are available using a lambda which is given a lambda for storing the value.
 
-  float value;
+  float value = NAN;
 
   if (uses_param(kFmiRoadTemperature) && q.Param(kFmiRoadTemperature))
     for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
@@ -617,7 +618,7 @@ void QueryDataSource::Impl::update_griddata_timeseries(const NFmiPoint& pLatLon)
   // Then handle one parameter at a time for speed. Should be rewritten when C++14 lambdas
   // are available using a lambda which is given a lambda for storing the value.
 
-  float value;
+  float value = NAN;
 
   if (uses_param(kFmiRoadTemperature) && q.Param(kFmiRoadTemperature))
     for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)

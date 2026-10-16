@@ -21,6 +21,7 @@
 #include <boost/program_options.hpp>
 #include <boost/serialization/vector.hpp>
 #include <json/json.h>
+#include <cmath>
 #include <smartmet/macgyver/StringConversion.h>
 #include <smartmet/macgyver/TimeParser.h>
 #include <smartmet/newbase/NFmiFastQueryInfo.h>
@@ -540,7 +541,7 @@ void run_querydata_locations_sync(NFmiQueryData& pQ,
   // set ratio of allowed missing data (e.g 0.1 means 10 %)
   auto jallowed_missing_ratio = Json::Path(".points.allow_missing_ratio").resolve(pJson);
 
-  double allowed_missing_ratio;
+  double allowed_missing_ratio = NAN;
   if (jallowed_missing_ratio.isNull())
     allowed_missing_ratio = 0.1;
   else
@@ -625,7 +626,7 @@ void run_querydata_locations_async(NFmiQueryData& pQ,
   // set ratio of allowed missing data (e.g 0.1 means 10 %)
   auto jallowed_missing_ratio = Json::Path(".points.allow_missing_ratio").resolve(pJson);
 
-  double allowed_missing_ratio;
+  double allowed_missing_ratio = NAN;
   if (jallowed_missing_ratio.isNull())
     allowed_missing_ratio = 0.1;
   else

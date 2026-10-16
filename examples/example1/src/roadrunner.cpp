@@ -74,7 +74,7 @@ bool parse_options(int argc, char* argv[])
   desc.emplace_back("-c configuration file");
   int descLen = static_cast<int>(desc.size());
 
-  int opt; 
+  int opt = 0;
   //Go trough options
   // NOLINTNEXTLINE(concurrency-mt-unsafe): single-threaded command line tool
   while ((opt = getopt(argc,argv,"hj:t:c:")) !=-1)

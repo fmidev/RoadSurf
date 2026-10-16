@@ -1,4 +1,6 @@
 #include "SkyView.h"
+
+#include <cmath>
 #include "JsonTools.h"
 #include "SkyVariables.h"
 #include <fstream>
@@ -37,7 +39,7 @@ SkyView::SkyView(const Json::Value& pJson )
     //Check if file exists
     if (!in)
       throw std::runtime_error("Failed to open '" + sky_view_file + "'");
-    double sky_view;
+    double sky_view = NAN;
     //Read in data
     while (in.good())
     {

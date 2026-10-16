@@ -678,7 +678,7 @@ double SmartMetSource::Impl::interpolate(const Observations& pObservations,
 
   // Search for first value after current time with valid value
 
-  unsigned int pos2;
+  unsigned int pos2 = 0;
   double value2 = MISSING;
   for (pos2 = pPos; pos2 < pObservations.size(); ++pos2)
   {
@@ -692,7 +692,7 @@ double SmartMetSource::Impl::interpolate(const Observations& pObservations,
 
   // Search for first value before current time with valid value
 
-  unsigned int pos1;
+  unsigned int pos1 = 0;
   double value1 = MISSING;
   for (pos1 = pPos - 1;; --pos1)
   {
@@ -918,7 +918,7 @@ void SmartMetSource::Impl::GetWeather(InputData& pData,
     // Find first position where t >= time. This is guaranteed to succeed
     // after the above tests.
 
-    unsigned int pos;
+    unsigned int pos = 0;
     for (pos = 0; pos < obs.size(); ++pos)
       if (obs[pos].date.PosixTime() >= pt)
         break;

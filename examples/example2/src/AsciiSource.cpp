@@ -3,6 +3,7 @@
 #include <json/json.h>
 #include <json/reader.h>
 #include <json/writer.h>
+#include <cmath>
 #include <smartmet/macgyver/StringConversion.h>
 #include <smartmet/newbase/NFmiPoint.h>
 #include <fstream>
@@ -118,20 +119,20 @@ void AsciiSource::Impl::read_file()
 
   // Data rows: yy mm dd hh tair rh vz rr1h rform srad lrad tsurf
 
-  int yy;
-  int mm;
-  int dd;
-  int hh;
-  int mi;
-  int ss;
-  int rform;
-  double tair;
-  double rh;
-  double vz;
-  double rr1h;
-  double srad;
-  double lrad;
-  double tsurf;
+  int yy = 0;
+  int mm = 0;
+  int dd = 0;
+  int hh = 0;
+  int mi = 0;
+  int ss = 0;
+  int rform = 0;
+  double tair = NAN;
+  double rh = NAN;
+  double vz = NAN;
+  double rr1h = NAN;
+  double srad = NAN;
+  double lrad = NAN;
+  double tsurf = NAN;
 
   while (in.good())
   {
@@ -237,7 +238,7 @@ double AsciiSource::Impl::interpolate(const NFmiMetTime& pTime,
 
   // Search for first value after current time with valid value
 
-  unsigned int pos2;
+  unsigned int pos2 = 0;
   double value2 = MISSING;
   for (pos2 = pPos; pos2 < mData.size(); ++pos2)
   {
@@ -251,7 +252,7 @@ double AsciiSource::Impl::interpolate(const NFmiMetTime& pTime,
 
   // Search for first value before current time with valid value
 
-  unsigned int pos1;
+  unsigned int pos1 = 0;
   double value1 = MISSING;
   for (pos1 = pPos - 1;; --pos1)
   {
@@ -312,7 +313,7 @@ void AsciiSource::Impl::GetWeather(InputData& pData,
     // Find first position where t >= time. This is guaranteed to succeed
     // after the above tests.
 
-    unsigned int pos;
+    unsigned int pos = 0;
     for (pos = 0; pos < mData.size(); ++pos)
       if (mData[pos].date.PosixTime() >= pt)
         break;

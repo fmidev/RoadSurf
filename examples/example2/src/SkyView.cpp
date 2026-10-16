@@ -1,4 +1,6 @@
 #include "SkyView.h"
+
+#include <cmath>
 #include "JsonTools.h"
 #include "SkyVariables.h"
 #include "Weather.h"
@@ -35,7 +37,7 @@ SkyView::SkyView(const Json::Value& pJson )
     std::ifstream in(sky_view_file);
     if (!in)
       throw std::runtime_error("Failed to open '" + sky_view_file + "'");
-    double sky_view;
+    double sky_view = NAN;
     while (in.good())
     {
       in >> id >> name >> lat >> lon >> sky_view;

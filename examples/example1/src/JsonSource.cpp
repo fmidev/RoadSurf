@@ -199,7 +199,7 @@ JsonSource::Impl::Impl(const time_t& /*pWallClock*/,
   //Initialize vector containing simulation times
   std::vector<time_t> simTime;
   auto t = pStartTime; //start time
-  struct tm *tt;
+  struct tm *tt = nullptr;
   for (int i = 0; i<SimLen; i++)
   {
     simTime.emplace_back(t);
