@@ -64,3 +64,11 @@ inline bool is_missing(double pValue)
 {
   return (std::isnan(pValue) || pValue < -9000);
 }
+
+// Assign the value unless it is missing
+template <typename T>
+inline void set_if_valid(T& pTarget, double pValue)
+{
+  if (!is_missing(pValue))
+    pTarget = pValue;
+}

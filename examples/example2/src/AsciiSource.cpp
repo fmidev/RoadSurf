@@ -51,6 +51,16 @@ class AsciiSource::Impl
 
 AsciiSource::~AsciiSource() = default;
 
+namespace
+{
+// Assign a value read from the file unless it is the missing value -9999
+void set_if_present(double& pTarget, double pValue)
+{
+  if (pValue > -9999)
+    pTarget = pValue;
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Read data from a file
@@ -150,22 +160,15 @@ void AsciiSource::Impl::read_file()
 
     Weather w{NFmiMetTime(yy, mm, dd, hh, mi, ss)};
 
-    if (tsurf > -9999)
-      w.troad = tsurf;
-    if (tair > -9999)
-      w.t2m = tair;
-    if (rh > -9999)
-      w.rh2m = rh;
-    if (vz > -9999)
-      w.vz = vz;
-    if (rr1h > -9999)
-      w.simuprec = rr1h;
+    set_if_present(w.troad, tsurf);
+    set_if_present(w.t2m, tair);
+    set_if_present(w.rh2m, rh);
+    set_if_present(w.vz, vz);
+    set_if_present(w.simuprec, rr1h);
     if (rform != -99)
       w.phase = rform;
-    if (srad > -9999)
-      w.swdn = srad;
-    if (lrad > -9999)
-      w.lwdn = lrad;
+    set_if_present(w.swdn, srad);
+    set_if_present(w.lwdn, lrad);
 
     mData.emplace_back(w);
   }
@@ -339,22 +342,14 @@ void AsciiSource::Impl::GetWeather(InputData& pData,
     if (data.simuprec > 100)
       data.simuprec = MISSING;
 
-    if (!is_missing(data.troad))
-      pData.TSurfObs[i] = data.troad;
-    if (!is_missing(data.t2m))
-      pData.tair[i] = data.t2m;
-    if (!is_missing(data.rh2m))
-      pData.Rhz[i] = data.rh2m;
-    if (!is_missing(data.vz))
-      pData.VZ[i] = data.vz;
-    if (!is_missing(data.lwdn))
-      pData.LW[i] = data.lwdn;
-    if (!is_missing(data.swdn))
-      pData.SW[i] = data.swdn;
-    if (!is_missing(data.simuprec))
-      pData.prec[i] = data.simuprec;
-    if (!is_missing(data.phase))
-      pData.PrecPhase[i] = data.phase;
+    set_if_valid(pData.TSurfObs[i], data.troad);
+    set_if_valid(pData.tair[i], data.t2m);
+    set_if_valid(pData.Rhz[i], data.rh2m);
+    set_if_valid(pData.VZ[i], data.vz);
+    set_if_valid(pData.LW[i], data.lwdn);
+    set_if_valid(pData.SW[i], data.swdn);
+    set_if_valid(pData.prec[i], data.simuprec);
+    set_if_valid(pData.PrecPhase[i], data.phase);
   }
 }
 
