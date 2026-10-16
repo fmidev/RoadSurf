@@ -51,6 +51,28 @@ class QueryDataSource::Impl
   void update_timeseries(const NFmiPoint& pLatLon) const;
   void update_pointdata_timeseries(const NFmiPoint& pLatLon) const;
   void update_griddata_timeseries(const NFmiPoint& pLatLon) const;
+  void init_times();
+  void init_observation_times(Observations& d) const;
+
+  template <typename Getter, typename Converter>
+  void store_param(NFmiMultiQueryInfo& q,
+                   Observations& d,
+                   FmiParameterName pParam,
+                   double Weather::*pPtr,
+                   Getter get_value,
+                   Converter convert) const;
+
+  template <typename Getter, typename TdewGetter>
+  void extract_timeseries(NFmiMultiQueryInfo& q,
+                          Observations& d,
+                          Getter get_value,
+                          TdewGetter get_tdew_value) const;
+
+  std::optional<std::size_t> find_time_position(long tcmp, std::size_t size) const;
+  void interpolate_weather(Weather& data,
+                           const Observations& d,
+                           long tcmp,
+                           std::size_t pos) const;
 
   // Access thread local instance of multiqueryinfo
   NFmiMultiQueryInfo& info() const
@@ -156,6 +178,68 @@ FmiParameterName parse_parameter_name(const std::string& pName)
     return cf_depth;
   throw std::runtime_error("Unknown parameter name '" + pName + "'");
 }
+
+// Shift the time by the given number of minutes
+void apply_time_shift(NFmiMetTime& t, int time_shift)
+{
+  if (time_shift != 0)
+  {
+    if (time_shift < 0)
+      t.PreviousMetTime(abs(time_shift));
+    else
+      t.NextMetTime(time_shift);
+  }
+}
+
+// The member of the weather struct for the parameter, or nullptr if there is none
+double Weather::*weather_member(FmiParameterName p)
+{
+  switch (p)
+  {
+    case kFmiRoadTemperature:
+      return &Weather::troad;
+    case kFmiTemperature:
+      return &Weather::t2m;
+    case kFmiDewPoint:
+      return &Weather::tdew2m;
+    case kFmiHumidity:
+      return &Weather::rh2m;
+    case kFmiWindSpeedMS:
+      return &Weather::vz;
+    case kFmiRadiationLW:
+      return &Weather::lwdn;
+    case kFmiRadiationGlobal:
+      return &Weather::swdn;
+    case kFmiRadiationNetSurfaceLW:
+      return &Weather::lwnet;
+    case kFmiRadiationSW:
+      return &Weather::swdir;
+    case kFmiPrecipitation1h:
+    case kFmiPrecipitationRate:
+      return &Weather::simuprec;
+    case cf_depth:
+      return &Weather::depth;
+    default:
+      return nullptr;
+  }
+}
+
+// Store the valid values of the weather into the input data at the given position
+void store_weather(InputData& pData, std::size_t i, const Weather& data)
+{
+  set_if_valid(pData.TSurfObs[i], data.troad);
+  set_if_valid(pData.tair[i], data.t2m);
+  set_if_valid(pData.Rhz[i], data.rh2m);
+  set_if_valid(pData.VZ[i], data.vz);
+  set_if_valid(pData.tdew[i], data.tdew2m);
+  set_if_valid(pData.LW[i], data.lwdn);
+  set_if_valid(pData.SW[i], data.swdn);
+  set_if_valid(pData.LW_net[i], data.lwnet);
+  set_if_valid(pData.SW_dir[i], data.swdir);
+  set_if_valid(pData.prec[i], data.simuprec);
+  set_if_valid(pData.PrecPhase[i], data.phase);
+  set_if_valid(pData.Depth[i], data.depth);
+}
 }  // namespace
 
 // ----------------------------------------------------------------------
@@ -230,17 +314,22 @@ QueryDataSource::Impl::Impl(const NFmiMetTime& pWallClock,
 
   // Initialize time comparevalues
 
+  init_times();
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Initialize the times and their compare values for the modeling period
+ */
+// ----------------------------------------------------------------------
+
+void QueryDataSource::Impl::init_times()
+{
   bool first = true;
   for (mPrivateInfo->ResetTime(); mPrivateInfo->NextTime();)
   {
     auto t = mPrivateInfo->ValidTime();
-    if (time_shift != 0)
-    {
-      if (time_shift < 0)
-        t.PreviousMetTime(abs(time_shift));
-      else
-        t.NextMetTime(time_shift);
-    }
+    apply_time_shift(t, time_shift);
     auto tc = t.GetCompareValue();
 
     if (tc < mStartTimeCompareValue)
@@ -254,13 +343,7 @@ QueryDataSource::Impl::Impl(const NFmiMetTime& pWallClock,
       if (mPrivateInfo->TimeIndex() > 0)
         mPrivateInfo->PreviousTime();
       t = mPrivateInfo->ValidTime();
-      if (time_shift != 0)
-      {
-        if (time_shift < 0)
-          t.PreviousMetTime(abs(time_shift));
-        else
-          t.NextMetTime(time_shift);
-      }
+      apply_time_shift(t, time_shift);
       tc = t.GetCompareValue();
       mFirstTimeIndex = mPrivateInfo->TimeIndex();
       first = false;
@@ -433,7 +516,117 @@ double QueryDataSource::Impl::nearest(const Observations& pObservations,
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Extract native timestep values from point data
+ * \brief Initialize the observations with the times of the modeling period
+ */
+// ----------------------------------------------------------------------
+
+void QueryDataSource::Impl::init_observation_times(Observations& d) const
+{
+  for (long time_index = mFirstTimeIndex; time_index <= mLastTimeIndex; ++time_index)
+  {
+    const auto& t = mTimes[time_index - mFirstTimeIndex];
+    Weather data{t};
+    d.emplace_back(data);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Store the valid values of a parameter into the observations
+ */
+// ----------------------------------------------------------------------
+
+template <typename Getter, typename Converter>
+void QueryDataSource::Impl::store_param(NFmiMultiQueryInfo& q,
+                                        Observations& d,
+                                        FmiParameterName pParam,
+                                        double Weather::*pPtr,
+                                        Getter get_value,
+                                        Converter convert) const
+{
+  if (!uses_param(pParam) || !q.Param(pParam))
+    return;
+
+  for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
+  {
+    float value = get_value();
+    if (value != kFloatMissing)
+      d[idx - mFirstTimeIndex].*pPtr = convert(value);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Extract the parameter values using the given value getter
+ *
+ * The dewpoint calculated from temperature and humidity uses its own getter.
+ */
+// ----------------------------------------------------------------------
+
+template <typename Getter, typename TdewGetter>
+void QueryDataSource::Impl::extract_timeseries(NFmiMultiQueryInfo& q,
+                                               Observations& d,
+                                               Getter get_value,
+                                               TdewGetter get_tdew_value) const
+{
+  // Then handle one parameter at a time for speed.
+
+  const auto as_is = [](float value) { return value; };
+
+  store_param(q, d, kFmiRoadTemperature, &Weather::troad, get_value, as_is);
+  store_param(q, d, kFmiTemperature, &Weather::t2m, get_value, as_is);
+  store_param(q, d, kFmiDewPoint, &Weather::tdew2m, get_value, as_is);
+  store_param(q, d, kFmiHumidity, &Weather::rh2m, get_value,
+              [](float value) { return std::max(0.0F, std::min(100.0F, value)); });
+  store_param(q, d, kFmiWindSpeedMS, &Weather::vz, get_value, as_is);
+  store_param(q, d, kFmiRadiationLW, &Weather::lwdn, get_value, as_is);
+  store_param(q, d, kFmiRadiationGlobal, &Weather::swdn, get_value, as_is);
+  store_param(q, d, kFmiRadiationNetSurfaceLW, &Weather::lwnet, get_value, as_is);
+  store_param(q, d, kFmiRadiationSW, &Weather::swdir, get_value, as_is);
+  store_param(q, d, kFmiPrecipitation1h, &Weather::simuprec, get_value, as_is);
+  store_param(q, d, kFmiPrecipitationRate, &Weather::simuprec, get_value, as_is);
+  store_param(q, d, kFmiPrecipitationForm, &Weather::phase, get_value,
+              [this](float value)
+              {
+                if (!precConversion.empty())
+                  value = ConvertPrecPhase(precConversion, value);
+                return value;
+              });
+  store_param(q, d, cf_depth, &Weather::depth, get_value, as_is);
+
+  if (uses_param(kFmiTemperature) && q.Param(kFmiTemperature) && uses_param(kFmiHumidity) &&
+      q.Param(kFmiHumidity) && !uses_param(kFmiDewPoint))
+  {
+    // Calculate Tdew frm T and RH
+    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
+    {
+      q.Param(kFmiTemperature);
+      auto t = get_tdew_value();
+      q.Param(kFmiHumidity);
+      auto rh = get_tdew_value();
+      if (t != kFloatMissing && rh != kFloatMissing)
+        d[idx - mFirstTimeIndex].tdew2m = CalcTdewOrRH(t, MISSING, rh);
+    }
+  }
+  if (uses_param(kFmiTemperature) && q.Param(kFmiTemperature) && uses_param(kFmiDewPoint) &&
+      q.Param(kFmiDewPoint) && !uses_param(kFmiHumidity))
+  {
+    // Calculate RH frm T and TDEW
+    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
+    {
+      q.Param(kFmiTemperature);
+      auto t = get_value();
+      q.Param(kFmiDewPoint);
+      auto tdew = get_value();
+      if (t != kFloatMissing && tdew != kFloatMissing)
+        d[idx - mFirstTimeIndex].rh2m = CalcTdewOrRH(t, tdew, MISSING);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Extract native timestep values from point data
  */
 // ----------------------------------------------------------------------
 
@@ -454,119 +647,10 @@ void QueryDataSource::Impl::update_pointdata_timeseries(const NFmiPoint& pLatLon
 
   // First extract the times
   auto& d = data();
+  init_observation_times(d);
 
-  for (long time_index = mFirstTimeIndex; time_index <= mLastTimeIndex; ++time_index)
-  {
-    const auto& t = mTimes[time_index - mFirstTimeIndex];
-    Weather data{t};
-    d.emplace_back(data);
-  }
-
-  // Then handle one parameter at a time for speed. Should be rewritten when C++14 lambdas
-  // are available using a lambda which is given a lambda for storing the value.
-
-  float value = NAN;
-
-  if (uses_param(kFmiRoadTemperature) && q.Param(kFmiRoadTemperature))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].troad = value;
-
-  if (uses_param(kFmiTemperature) && q.Param(kFmiTemperature))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].t2m = value;
-
-  if (uses_param(kFmiDewPoint) && q.Param(kFmiDewPoint))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].tdew2m = value;
-
-  if (uses_param(kFmiHumidity) && q.Param(kFmiHumidity))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].rh2m = std::max(0.0F, std::min(100.0F, value));
-
-  if (uses_param(kFmiWindSpeedMS) && q.Param(kFmiWindSpeedMS))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].vz = value;
-
-  if (uses_param(kFmiRadiationLW) && q.Param(kFmiRadiationLW))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].lwdn = value;
-
-  if (uses_param(kFmiRadiationGlobal) && q.Param(kFmiRadiationGlobal))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].swdn = value;
-
-  if (uses_param(kFmiRadiationNetSurfaceLW) && q.Param(kFmiRadiationNetSurfaceLW))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].lwnet = value;
-
-  if (uses_param(kFmiRadiationSW) && q.Param(kFmiRadiationSW))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].swdir = value;
-
-  if (uses_param(kFmiPrecipitation1h) && q.Param(kFmiPrecipitation1h))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].simuprec = value;
-
-  if (uses_param(kFmiPrecipitationRate) && q.Param(kFmiPrecipitationRate))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].simuprec = value;
-
-  if (uses_param(kFmiPrecipitationForm) && q.Param(kFmiPrecipitationForm))
-  {
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-    {
-      if ((value = q.FloatValue()) != kFloatMissing)
-      {
-        if (!precConversion.empty())
-          value = ConvertPrecPhase(precConversion, value);
-        d[idx - mFirstTimeIndex].phase = value;
-      }
-    }
-  }
-  if (uses_param(cf_depth) && q.Param(cf_depth))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.FloatValue()) != kFloatMissing)
-        d[idx - mFirstTimeIndex].depth = value;
-
-  if (uses_param(kFmiTemperature) && q.Param(kFmiTemperature) && uses_param(kFmiHumidity) &&
-      q.Param(kFmiHumidity) && !uses_param(kFmiDewPoint))
-  {
-    // Calculate Tdew frm T and RH
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-    {
-      q.Param(kFmiTemperature);
-      auto t = q.FloatValue();
-      q.Param(kFmiHumidity);
-      auto rh = q.FloatValue();
-      if (t != kFloatMissing && rh != kFloatMissing)
-        d[idx - mFirstTimeIndex].tdew2m = CalcTdewOrRH(t, MISSING, rh);
-    }
-  }
-  if (uses_param(kFmiTemperature) && q.Param(kFmiTemperature) && uses_param(kFmiDewPoint) &&
-      q.Param(kFmiDewPoint) && !uses_param(kFmiHumidity))
-  {
-    // Calculate RH frm T and TDEW
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-    {
-      q.Param(kFmiTemperature);
-      auto t = q.FloatValue();
-      q.Param(kFmiDewPoint);
-      auto tdew = q.FloatValue();
-      if (t != kFloatMissing && tdew != kFloatMissing)
-        d[idx - mFirstTimeIndex].rh2m = CalcTdewOrRH(t, tdew, MISSING);
-    }
-  }
+  const auto get_value = [&q]() { return q.FloatValue(); };
+  extract_timeseries(q, d, get_value, get_value);
  // std::ofstream outputFile("/smartmet/data/virve/txt/atm_forecast.txt",std::ios::app);
  // if (uses_param(kFmiTemperature) && q.Param(kFmiTemperature)){
  //    outputFile<<pLatLon.Y()<<" "<<pLatLon.X()<<std::endl;
@@ -585,9 +669,10 @@ void QueryDataSource::Impl::update_pointdata_timeseries(const NFmiPoint& pLatLon
  // }
  // outputFile.close();
 }
+
 // ----------------------------------------------------------------------
 /*!
- * \brief Extract native timestep values from grid data
+ * \brief Extract native timestep values from grid data
  */
 // ----------------------------------------------------------------------
 
@@ -607,119 +692,11 @@ void QueryDataSource::Impl::update_griddata_timeseries(const NFmiPoint& pLatLon)
   // First extract the times
 
   auto& d = data();
+  init_observation_times(d);
 
-  for (long time_index = mFirstTimeIndex; time_index <= mLastTimeIndex; ++time_index)
-  {
-    const auto& t = mTimes[time_index - mFirstTimeIndex];
-    Weather data{t};
-    d.emplace_back(data);
-  }
-
-  // Then handle one parameter at a time for speed. Should be rewritten when C++14 lambdas
-  // are available using a lambda which is given a lambda for storing the value.
-
-  float value = NAN;
-
-  if (uses_param(kFmiRoadTemperature) && q.Param(kFmiRoadTemperature))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].troad = value;
-
-  if (uses_param(kFmiTemperature) && q.Param(kFmiTemperature))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].t2m = value;
-
-  if (uses_param(kFmiDewPoint) && q.Param(kFmiDewPoint))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].tdew2m = value;
-
-  if (uses_param(kFmiHumidity) && q.Param(kFmiHumidity))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].rh2m = std::max(0.0F, std::min(100.0F, value));
-
-  if (uses_param(kFmiWindSpeedMS) && q.Param(kFmiWindSpeedMS))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].vz = value;
-
-  if (uses_param(kFmiRadiationLW) && q.Param(kFmiRadiationLW))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].lwdn = value;
-
-  if (uses_param(kFmiRadiationGlobal) && q.Param(kFmiRadiationGlobal))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].swdn = value;
-
-  if (uses_param(kFmiRadiationNetSurfaceLW) && q.Param(kFmiRadiationNetSurfaceLW))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].lwnet = value;
-
-  if (uses_param(kFmiRadiationSW) && q.Param(kFmiRadiationSW))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].swdir = value;
-
-  if (uses_param(kFmiPrecipitation1h) && q.Param(kFmiPrecipitation1h))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].simuprec = value;
-
-  if (uses_param(kFmiPrecipitationRate) && q.Param(kFmiPrecipitationRate))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].simuprec = value;
-
-  if (uses_param(kFmiPrecipitationForm) && q.Param(kFmiPrecipitationForm))
-  {
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-    {
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-      {
-        if (!precConversion.empty())
-          value = ConvertPrecPhase(precConversion, value);
-        d[idx - mFirstTimeIndex].phase = value;
-      }
-    }
-  }
-  if (uses_param(cf_depth) && q.Param(cf_depth))
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-      if ((value = q.CachedInterpolation(loc_cache)) != kFloatMissing)
-        d[idx - mFirstTimeIndex].depth = value;
-
-  if (uses_param(kFmiTemperature) && q.Param(kFmiTemperature) && uses_param(kFmiHumidity) &&
-      q.Param(kFmiHumidity) && !uses_param(kFmiDewPoint))
-  {
-    // Calculate Tdew frm T and RH
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-    {
-      q.Param(kFmiTemperature);
-      auto t = q.FloatValue();
-      q.Param(kFmiHumidity);
-      auto rh = q.FloatValue();
-      if (t != kFloatMissing && rh != kFloatMissing)
-        d[idx - mFirstTimeIndex].tdew2m = CalcTdewOrRH(t, MISSING, rh);
-    }
-  }
-  if (uses_param(kFmiTemperature) && q.Param(kFmiTemperature) && uses_param(kFmiDewPoint) &&
-      q.Param(kFmiDewPoint) && !uses_param(kFmiHumidity))
-  {
-    // Calculate RH frm T and TDEW
-    for (long idx = mFirstTimeIndex; idx <= mLastTimeIndex && q.TimeIndex(idx); ++idx)
-    {
-      q.Param(kFmiTemperature);
-      auto t = q.CachedInterpolation(loc_cache);
-      q.Param(kFmiDewPoint);
-      auto tdew = q.CachedInterpolation(loc_cache);
-      if (t != kFloatMissing && tdew != kFloatMissing)
-        d[idx - mFirstTimeIndex].rh2m = CalcTdewOrRH(t, tdew, MISSING);
-    }
-  }
+  extract_timeseries(
+      q, d, [&q, &loc_cache]() { return q.CachedInterpolation(loc_cache); },
+      [&q]() { return q.FloatValue(); });
 }
 
 // ----------------------------------------------------------------------
@@ -736,6 +713,81 @@ void QueryDataSource::Impl::update_timeseries(const NFmiPoint& pLatLon) const
     update_pointdata_timeseries(pLatLon);
   else
     update_griddata_timeseries(pLatLon);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Find the first time position >= the given time, and remember it
+ */
+// ----------------------------------------------------------------------
+
+std::optional<std::size_t> QueryDataSource::Impl::find_time_position(long tcmp,
+                                                                      std::size_t size) const
+{
+  // Search the first time point >= theTime. We are likely to only advance
+  // in time, hence we are not likely to take any steps back in this
+  // first loop.
+
+  std::size_t pos = timeindex();
+
+  while (pos > 0)
+  {
+    if (mCompareValues[pos - 1] < tcmp)
+      break;
+    --pos;
+  }
+
+  // This is also an unlikely path. In the first iteration it may perform
+  // several loops, after that 0 is much more likely than one.
+  for (; pos < size; ++pos)
+  {
+    if (mCompareValues[pos] >= tcmp)
+      break;
+  }
+
+  if (pos >= size)
+    return {};
+
+  timeindex() = pos;
+  return pos;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Interpolate the weather parameters in time
+ */
+// ----------------------------------------------------------------------
+
+void QueryDataSource::Impl::interpolate_weather(Weather& data,
+                                                const Observations& d,
+                                                long tcmp,
+                                                std::size_t pos) const
+{
+  // Must interpolate
+
+  const int max_time_gap = 180;
+
+  for (const auto& p : mParamNames)
+  {
+    // If there is dewpoint data and temperature data but not relative
+    // humidity data, interpolate the RH values calculated in
+    // update_timeseries
+    if (p == kFmiDewPoint && uses_param(kFmiTemperature) && !uses_param(kFmiHumidity))
+      data.rh2m = interpolate(d, tcmp, pos, max_time_gap, &Weather::rh2m);
+    else if (p == kFmiHumidity && uses_param(kFmiTemperature) && !uses_param(kFmiDewPoint))
+      data.tdew2m = interpolate(d, tcmp, pos, max_time_gap, &Weather::tdew2m);
+
+    if (p == kFmiPrecipitationForm)
+    {
+      data.phase = nearest(d, tcmp, pos, max_time_gap, &Weather::phase);
+    }
+    else
+    {
+      double Weather::*ptr = weather_member(p);  // pointer to double member of struct
+      if (ptr)
+        data.*ptr = interpolate(d, tcmp, pos, max_time_gap, ptr);
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -779,94 +831,18 @@ void QueryDataSource::Impl::GetWeather(InputData& pData,
     if (mObservationFlag && tcmp > mWallClockCompareValue)
       continue;
 
-    // Search the first time point >= theTime. We are likely to only advance
-    // in time, hence we are not likely to take any steps back in this
-    // first loop.
-
-    std::size_t pos = timeindex();
-
-    while (pos > 0)
-    {
-      if (mCompareValues[pos - 1] < tcmp)
-        break;
-      --pos;
-    }
-
-    // This is also an unlikely path. In the first iteration it may perform
-    // several loops, after that 0 is much more likely than one.
-    for (; pos < d.size(); ++pos)
-    {
-      if (mCompareValues[pos] >= tcmp)
-        break;
-    }
-
-    if (pos >= d.size())
+    auto position = find_time_position(tcmp, d.size());
+    if (!position)
       continue;
 
-    timeindex() = pos;
+    std::size_t pos = *position;
 
     Weather data{t};  // Note: NFmiMetTime instead of posix_time to avoid conversions
 
     if (mCompareValues[pos] == tcmp)
       data = d[pos];
     else
-    {
-      // Must interpolate
-
-      const int max_time_gap = 180;
-
-      double Weather::*ptr = nullptr;  // pointer to double member of struct
-
-      for (const auto& p : mParamNames)
-      {
-        // If there is dewpoint data and temperature data but not relative
-        // humidity data, interpolate the RH values calculated in
-        // update_timeseries
-        if (p == kFmiDewPoint && uses_param(kFmiTemperature) && !uses_param(kFmiHumidity))
-        {
-          ptr = &Weather::rh2m;
-          data.*ptr = interpolate(d, tcmp, pos, max_time_gap, ptr);
-        }
-        else if (p == kFmiHumidity && uses_param(kFmiTemperature) && !uses_param(kFmiDewPoint))
-        {
-          ptr = &Weather::tdew2m;
-          data.*ptr = interpolate(d, tcmp, pos, max_time_gap, ptr);
-        }
-        if (p == kFmiPrecipitationForm)
-        {
-          ptr = &Weather::phase;
-          data.*ptr = nearest(d, tcmp, pos, max_time_gap, ptr);
-        }
-        else
-        {
-          if (p == kFmiRoadTemperature)
-            ptr = &Weather::troad;
-          else if (p == kFmiTemperature)
-            ptr = &Weather::t2m;
-          else if (p == kFmiDewPoint)
-            ptr = &Weather::tdew2m;
-          else if (p == kFmiHumidity)
-            ptr = &Weather::rh2m;
-          else if (p == kFmiWindSpeedMS)
-            ptr = &Weather::vz;
-          else if (p == kFmiRadiationLW)
-            ptr = &Weather::lwdn;
-          else if (p == kFmiRadiationGlobal)
-            ptr = &Weather::swdn;
-          else if (p == kFmiRadiationNetSurfaceLW)
-            ptr = &Weather::lwnet;
-          else if (p == kFmiRadiationSW)
-            ptr = &Weather::swdir;
-          else if (p == kFmiPrecipitation1h || p == kFmiPrecipitationRate)
-            ptr = &Weather::simuprec;
-          else if (p == cf_depth)
-            ptr = &Weather::depth;
-
-          if (ptr)
-            data.*ptr = interpolate(d, tcmp, pos, max_time_gap, ptr);
-        }
-      }
-    }
+      interpolate_weather(data, d, tcmp, pos);
 
     // clamp rh to 0-100
     if (!std::isnan(data.rh2m))
@@ -878,30 +854,7 @@ void QueryDataSource::Impl::GetWeather(InputData& pData,
 
     // TODO: tdew???
 
-    if (!is_missing(data.troad))
-      pData.TSurfObs[i] = data.troad;
-    if (!is_missing(data.t2m))
-      pData.tair[i] = data.t2m;
-    if (!is_missing(data.rh2m))
-      pData.Rhz[i] = data.rh2m;
-    if (!is_missing(data.vz))
-      pData.VZ[i] = data.vz;
-    if (!is_missing(data.tdew2m))
-      pData.tdew[i] = data.tdew2m;
-    if (!is_missing(data.lwdn))
-      pData.LW[i] = data.lwdn;
-    if (!is_missing(data.swdn))
-      pData.SW[i] = data.swdn;
-    if (!is_missing(data.lwnet))
-      pData.LW_net[i] = data.lwnet;
-    if (!is_missing(data.swdir))
-      pData.SW_dir[i] = data.swdir;
-    if (!is_missing(data.simuprec))
-      pData.prec[i] = data.simuprec;
-    if (!is_missing(data.phase))
-      pData.PrecPhase[i] = data.phase;
-    if (!is_missing(data.depth))
-      pData.Depth[i] = data.depth;
+    store_weather(pData, i, data);
   }
 }
 
