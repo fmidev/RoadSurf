@@ -820,6 +820,29 @@ void SmartMetSource::Impl::SpikeCheck(Observations& pObs,double spikeSize,std::s
         RemoveSpikes(pObs,spikeSize, spikeDuration,ptr);
     }
 }
+namespace
+{
+// Print the mean and standard deviation of the values and flag the values beyond 3 sigma
+void report_outliers(const std::vector<double>& values,
+                     const std::vector<int>& pos_vector,
+                     const std::vector<int>& it_vector)
+{
+  double mean = std::accumulate(values.begin(), values.end(), 0.0) / values.size();
+  double sum2 = std::inner_product(values.begin(), values.end(), values.begin(), 0.0);
+  double stdDev = std::sqrt(sum2 / values.size() - mean * mean);
+  double treshold = 3 * stdDev;
+  std::cout << mean << " " << stdDev << " " << treshold << std::endl;
+  for (std::size_t j = 0; j < values.size(); j++)
+  {
+    std::cout << values[j] << " " << pos_vector[j] << " " << it_vector[j] << std::endl;
+    if (std::abs(values[j] - mean) >= treshold)
+    {
+      std::cout << "outlier detected" << std::endl;
+    }
+  }
+}
+}  // namespace
+
 void SmartMetSource::Impl::RemoveOutliers()
 {
      std::size_t minSize=50; //minimum datapoin limit
@@ -847,19 +870,8 @@ void SmartMetSource::Impl::RemoveOutliers()
 	       }
 	   }
 	}
-        if (values.size()>=minSize){
-          double mean = std::accumulate(values.begin(),values.end(),0.0) / values.size();
-          double sum2=std::inner_product(values.begin(),values.end(),values.begin(),0.0);
-          double stdDev=std::sqrt(sum2/values.size()-mean*mean);
-          double treshold=3*stdDev;
-          std::cout<<mean<<" "<<stdDev<<" "<<treshold<<std::endl;
-          for (std::size_t j =0; j<values.size();j++){
-             std::cout<<values[j]<<" "<<pos_vector[j]<<" "<<it_vector[j]<<std::endl;
-             if(std::abs(values[j]-mean)>=treshold){
-          	  std::cout<<"outlier detected"<<std::endl;
-             }
-          }
-	}
+        if (values.size()>=minSize)
+          report_outliers(values, pos_vector, it_vector);
         t+=dt;
 	tNext+=dt;
 
