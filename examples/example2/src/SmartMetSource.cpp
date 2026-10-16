@@ -38,6 +38,78 @@ std::string format_smartmet_time(NFmiMetTime pTime, int pTimeMargin)
   ret += pTime.ToStr(kHour + kMinute).CharPtr();
   return ret;
 }
+
+// Set the value from the JSON field unless it is null, false if it is null
+bool set_from_json(double& pTarget, const Json::Value& j, const std::string& pField)
+{
+  Json::Value nulljson;
+  auto jval = j.get(pField, nulljson);
+  if (jval.isNull())
+    return false;
+  pTarget = jval.asDouble();
+  return true;
+}
+
+// Append a field to a comma separated list of fields unless the field is empty
+void append_field(std::string& pFields, const std::string& pField)
+{
+  if (!pField.empty())
+    pFields += "," + pField;
+}
+
+// Throw if the server response is not OK
+void check_response(const cpr::Response& response)
+{
+  check_response(response);
+}
+
+// The member of the weather struct for the parameter, or nullptr if there is none
+double Weather::*weather_member(const std::string& p)
+{
+  if (p == "roadtemperature")
+    return &Weather::troad;
+  if (p == "airtemperature")
+    return &Weather::t2m;
+  if (p == "dewpoint")
+    return &Weather::tdew2m;
+  if (p == "humidity")
+    return &Weather::rh2m;
+  if (p == "windspeed")
+    return &Weather::vz;
+  if (p == "longwaveradiation")
+    return &Weather::lwdn;
+  if (p == "shortwaveradiation")
+    return &Weather::swdn;
+  if (p == "precipitation" || p == "precipitationrate")
+    return &Weather::simuprec;
+  if (p == "precipitationform")
+    return &Weather::phase;
+  return nullptr;
+}
+
+// Find first position where t >= time
+unsigned int first_position_at_or_after(const Observations& obs, const Fmi::DateTime& pt)
+{
+  unsigned int pos = 0;
+  for (pos = 0; pos < obs.size(); ++pos)
+    if (obs[pos].date.PosixTime() >= pt)
+      break;
+  return pos;
+}
+
+// Store the valid values of the weather into the input data at the given position
+void store_weather(InputData& pData, std::size_t i, const Weather& data)
+{
+  set_if_valid(pData.TSurfObs[i], data.troad);
+  set_if_valid(pData.tair[i], data.t2m);
+  set_if_valid(pData.tdew[i], data.tdew2m);
+  set_if_valid(pData.Rhz[i], data.rh2m);
+  set_if_valid(pData.VZ[i], data.vz);
+  set_if_valid(pData.LW[i], data.lwdn);
+  set_if_valid(pData.SW[i], data.swdn);
+  set_if_valid(pData.prec[i], data.simuprec);
+  set_if_valid(pData.PrecPhase[i], data.phase);
+}
 }  // namespace
 
 // ----------------------------------------------------------------------
@@ -114,6 +186,9 @@ class SmartMetSource::Impl
   void read_ids(const Json::Value& pConfig);
   void read_latlon(const NFmiPoint& pLatLon,const Json::Value& pConfig);
   void read_data(const cpr::Url& pUrl, const cpr::Parameters& pParams,const Json::Value& pConfig);
+  Weather parse_weather(const Json::Value& j, const NFmiMetTime& pTime) const;
+  const Observations* nearest_observations(const NFmiPoint& pLatLon);
+  void quality_control(const Json::Value& pConfig);
   bool uses_param(const std::string& pParam) const;
   void SameValueCheck(Observations& pObs,int sameLimit);
   void RemoveTooManySameValues( Observations& pObs,int sameLimit, double Weather::*pPtr);
@@ -236,6 +311,68 @@ void SmartMetSource::Impl::read_latlon(const NFmiPoint& pLatLon,const Json::Valu
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Parse the weather of a single SmartMet row
+ */
+// ----------------------------------------------------------------------
+
+Weather SmartMetSource::Impl::parse_weather(const Json::Value& j, const NFmiMetTime& pTime) const
+{
+  Weather data{pTime};
+
+#if 0
+  Json::StyledWriter writer;
+  std::cout << "JSON:\n" << writer.write(j) << std::endl;
+#endif
+  if (!set_from_json(data.troad, j, mTroadF))
+    set_from_json(data.troad, j, mTroadSF);
+  set_from_json(data.t2m, j, mT2mF);
+  set_from_json(data.tdew2m, j, mTdewF);
+  set_from_json(data.rh2m, j, mRhF);
+  set_from_json(data.vz, j, mWspdF);
+  set_from_json(data.lwdn, j, mLradF);
+  set_from_json(data.swdn, j, mSradF);
+  set_from_json(data.lwnet, j, mLradNetF);
+  set_from_json(data.swdir, j, mSradDirF);
+  set_from_json(data.simuprec, j, mRr1hF);
+  set_from_json(data.simuprec, j, mRrF);
+  set_from_json(data.phase, j, mRformF);
+
+  if (is_missing(data.tdew2m) and !is_missing(data.rh2m) and !is_missing(data.t2m))
+    data.tdew2m = CalcTdewOrRH(data.t2m, MISSING, data.rh2m);
+
+  if (is_missing(data.rh2m) and !is_missing(data.tdew2m) and !is_missing(data.t2m))
+    data.rh2m = CalcTdewOrRH(data.t2m, data.tdew2m, MISSING);
+  return data;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Quality control the observations if requested
+ */
+// ----------------------------------------------------------------------
+
+void SmartMetSource::Impl::quality_control(const Json::Value& pConfig)
+{
+  auto obs_qc = Json::Path(".model.obs_qc").resolve(pConfig, 0).asInt();
+  if (obs_qc > 0)
+  {
+     auto maxSameTolerance = Json::Path(".model.maxSameTolerance").resolve(pConfig, 0).asInt();
+     std::map<int, Observations>::iterator it;
+     auto spikeSize = Json::Path(".model.minSpikeSize").resolve(pConfig, 0).asDouble();
+     auto maxSpikeDuration = Json::Path(".model.maxSpikeDuration").resolve(pConfig, 0).asInt();
+     for (it = mData.begin(); it != mData.end();it++) {
+        auto obs=it->second;
+
+        SameValueCheck(obs,maxSameTolerance);
+        SpikeCheck(obs,spikeSize,maxSpikeDuration);
+        MaxMinCheck(obs);
+ 	it->second=obs;
+     }
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Read data from the server
  */
 // ----------------------------------------------------------------------
@@ -320,94 +457,12 @@ void SmartMetSource::Impl::read_data(const cpr::Url& pUrl, const cpr::Parameters
       mStationTree.insert(Station{lon, lat, id});
     }
 
-    Weather data{time};
-
-    Json::Value nulljson;
-
-#if 0
-    Json::StyledWriter writer;
-    std::cout << "JSON:\n" << writer.write(j) << std::endl;
-#endif
-    auto jval = j.get(mTroadF, nulljson);
-    if (!jval.isNull())
-    {
-      data.troad = jval.asDouble();
-    }
-    else
-    {
-      jval = j.get(mTroadSF, nulljson);
-      if (!jval.isNull())
-      {
-        data.troad = jval.asDouble();
-      }
-    }
-    jval = j.get(mT2mF, nulljson);
-    if (!jval.isNull())
-      data.t2m = jval.asDouble();
-
-    jval = j.get(mTdewF, nulljson);
-    if (!jval.isNull())
-      data.tdew2m = jval.asDouble();
-
-    jval = j.get(mRhF, nulljson);
-    if (!jval.isNull())
-      data.rh2m = jval.asDouble();
-
-    jval = j.get(mWspdF, nulljson);
-    if (!jval.isNull())
-      data.vz = jval.asDouble();
-
-    jval = j.get(mLradF, nulljson);
-    if (!jval.isNull())
-      data.lwdn = jval.asDouble();
-
-    jval = j.get(mSradF, nulljson);
-    if (!jval.isNull())
-      data.swdn = jval.asDouble();
-
-    jval = j.get(mLradNetF, nulljson);
-    if (!jval.isNull())
-      data.lwnet = jval.asDouble();
-
-    jval = j.get(mSradDirF, nulljson);
-    if (!jval.isNull())
-      data.swdir = jval.asDouble();
-    jval = j.get(mRr1hF, nulljson);
-    if (!jval.isNull())
-      data.simuprec = jval.asDouble();
-
-    jval = j.get(mRrF, nulljson);
-    if (!jval.isNull())
-      data.simuprec = jval.asDouble();
-
-    jval = j.get(mRformF, nulljson);
-    if (!jval.isNull())
-      data.phase = jval.asDouble();
-
-    if (is_missing(data.tdew2m) and !is_missing(data.rh2m) and !is_missing(data.t2m))
-      data.tdew2m = CalcTdewOrRH(data.t2m, MISSING, data.rh2m);
-
-    if (is_missing(data.rh2m) and !is_missing(data.tdew2m) and !is_missing(data.t2m))
-      data.rh2m = CalcTdewOrRH(data.t2m, data.tdew2m, MISSING);
+    Weather data = parse_weather(j, time);
     last_pos->second.push_back(data);
   }
 
-  auto obs_qc = Json::Path(".model.obs_qc").resolve(pConfig, 0).asInt();
-  if (obs_qc > 0)
-  {
-     auto maxSameTolerance = Json::Path(".model.maxSameTolerance").resolve(pConfig, 0).asInt();
-     std::map<int, Observations>::iterator it;
-     auto spikeSize = Json::Path(".model.minSpikeSize").resolve(pConfig, 0).asDouble();
-     auto maxSpikeDuration = Json::Path(".model.maxSpikeDuration").resolve(pConfig, 0).asInt();
-     for (it = mData.begin(); it != mData.end();it++) {
-        auto obs=it->second;
+  quality_control(pConfig);
 
-        SameValueCheck(obs,maxSameTolerance);
-        SpikeCheck(obs,spikeSize,maxSpikeDuration);
-        MaxMinCheck(obs);
- 	it->second=obs;
-     }
-  }
 //Outlier check needs further studies
 /*  if (obs_qc == 2)
   {
@@ -566,30 +621,18 @@ SmartMetSource::Impl::Impl(const NFmiMetTime& pWallClock,
 
   mParameters = s_number + "," + mDateF + "," + s_lon + "," + s_lat;
 
-  if (!mTroadF.empty())
-    mParameters += "," + mTroadF;
-  if (!mT2mF.empty())
-    mParameters += "," + mT2mF;
-  if (!mTdewF.empty())
-    mParameters += "," + mTdewF;
-  if (!mRhF.empty())
-    mParameters += "," + mRhF;
-  if (!mWspdF.empty())
-    mParameters += "," + mWspdF;
-  if (!mLradF.empty())
-    mParameters += "," + mLradF;
-  if (!mSradF.empty())
-    mParameters += "," + mSradF;
-  if (!mLradNetF.empty())
-    mParameters += "," + mLradNetF;
-  if (!mSradDirF.empty())
-    mParameters += "," + mSradDirF;
-  if (!mRr1hF.empty())
-    mParameters += "," + mRr1hF;
-  if (!mRrF.empty())
-    mParameters += "," + mRrF;
-  if (!mRformF.empty())
-    mParameters += "," + mRformF;
+  append_field(mParameters, mTroadF);
+  append_field(mParameters, mT2mF);
+  append_field(mParameters, mTdewF);
+  append_field(mParameters, mRhF);
+  append_field(mParameters, mWspdF);
+  append_field(mParameters, mLradF);
+  append_field(mParameters, mSradF);
+  append_field(mParameters, mLradNetF);
+  append_field(mParameters, mSradDirF);
+  append_field(mParameters, mRr1hF);
+  append_field(mParameters, mRrF);
+  append_field(mParameters, mRformF);
 
   // If a keyword is set, read the data now
   //
@@ -881,6 +924,31 @@ void SmartMetSource::Impl::RemoveOutliers()
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief The observations of the nearest station, cached for the last location
+ */
+// ----------------------------------------------------------------------
+
+const Observations* SmartMetSource::Impl::nearest_observations(const NFmiPoint& pLatLon)
+{
+  if (!myLatLon || *myLatLon != pLatLon)
+  {
+    // Update new active location
+    myLatLon = pLatLon;
+    // No station near enough?
+    auto nearest_station =
+        mStationTree.nearest(Station{pLatLon.X(), pLatLon.Y()}, Station::ChordLength(mRadius));
+    if (!nearest_station)
+      return nullptr;
+    // No data for the station?!?!
+    myData = mData.find(nearest_station->ID());
+    if (myData == mData.end())
+      return nullptr;
+  }
+  return &myData->second;
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Get the weather for the given point
  */
 // ----------------------------------------------------------------------
@@ -895,22 +963,11 @@ void SmartMetSource::Impl::GetWeather(InputData& pData,
 //if (!mInitialized)
   //  read_latlon(pLatLon);
 
-  if (!myLatLon || *myLatLon != pLatLon)
-  {
-    // Update new active location
-    myLatLon = pLatLon;
-    // No station near enough?
-    auto nearest_station =
-        mStationTree.nearest(Station{pLatLon.X(), pLatLon.Y()}, Station::ChordLength(mRadius));
-    if (!nearest_station)
-      return;
-    // No data for the station?!?!
-    myData = mData.find(nearest_station->ID());
-    if (myData == mData.end())
-      return;
-  }
+  const auto* nearest_obs = nearest_observations(pLatLon);
+  if (nearest_obs == nullptr)
+    return;
 
-  const auto& obs = myData->second;
+  const auto& obs = *nearest_obs;
   if (obs.empty())
     return;
 
@@ -930,37 +987,14 @@ void SmartMetSource::Impl::GetWeather(InputData& pData,
     // Find first position where t >= time. This is guaranteed to succeed
     // after the above tests.
 
-    unsigned int pos = 0;
-    for (pos = 0; pos < obs.size(); ++pos)
-      if (obs[pos].date.PosixTime() >= pt)
-        break;
+    unsigned int pos = first_position_at_or_after(obs, pt);
 
     const int max_time_gap = 180;
-
-    double Weather::*ptr = nullptr;  // pointer to double member of struct
 
     Weather data{pt};
     for (const auto& p : mParams)
     {
-      if (p == "roadtemperature")
-        ptr = &Weather::troad;
-      else if (p == "airtemperature")
-        ptr = &Weather::t2m;
-      else if (p == "dewpoint")
-        ptr = &Weather::tdew2m;
-      else if (p == "humidity")
-        ptr = &Weather::rh2m;
-      else if (p == "windspeed")
-        ptr = &Weather::vz;
-      else if (p == "longwaveradiation")
-        ptr = &Weather::lwdn;
-      else if (p == "shortwaveradiation")
-        ptr = &Weather::swdn;
-      else if (p == "precipitation" || p == "precipitationrate")
-        ptr = &Weather::simuprec;
-      else if (p == "precipitationform")
-        ptr = &Weather::phase;
-
+      double Weather::*ptr = weather_member(p);  // pointer to double member of struct
       if (ptr)
         data.*ptr = interpolate(obs, pt, pos, max_time_gap, ptr);
     }
@@ -975,24 +1009,7 @@ void SmartMetSource::Impl::GetWeather(InputData& pData,
 
     // TODO: tdew????
 
-    if (!is_missing(data.troad))
-      pData.TSurfObs[i] = data.troad;
-    if (!is_missing(data.t2m))
-      pData.tair[i] = data.t2m;
-    if (!is_missing(data.tdew2m))
-      pData.tdew[i] = data.tdew2m;
-    if (!is_missing(data.rh2m))
-      pData.Rhz[i] = data.rh2m;
-    if (!is_missing(data.vz))
-      pData.VZ[i] = data.vz;
-    if (!is_missing(data.lwdn))
-      pData.LW[i] = data.lwdn;
-    if (!is_missing(data.swdn))
-      pData.SW[i] = data.swdn;
-    if (!is_missing(data.simuprec))
-      pData.prec[i] = data.simuprec;
-    if (!is_missing(data.phase))
-      pData.PrecPhase[i] = data.phase;
+    store_weather(pData, i, data);
   }
 }
 
