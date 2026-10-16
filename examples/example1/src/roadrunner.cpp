@@ -154,6 +154,27 @@ std::vector<time_t> get_times(const InputSettings& pSettings)
 }
 
 
+namespace
+{
+// Message prefix for the first required input which is missing at time step i, or nullptr
+const char* missing_input_message(const InputData& data, int i)
+{
+  if (is_missing(data.tair[i]))
+    return "2m temperature missing at ";
+  if (is_missing(data.Rhz[i]))
+    return "RH missing at ";
+  if (is_missing(data.prec[i]))
+    return "Precipitation missing at ";
+  if (is_missing(data.SW[i]))
+    return "SW missing at ";
+  if (is_missing(data.LW[i]))
+    return "LW missing at ";
+  if (is_missing(data.VZ[i]))
+    return "VZ missing at  ";
+  return nullptr;
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Read data required for simulation
@@ -192,45 +213,10 @@ InputData read_input(InputSettings& pSettings,
       struct ::tm pTimeBuffer{};  // gmtime_r is thread safe
       auto pTime=gmtime_r(&pTimes[i], &pTimeBuffer);
       std::strftime(timeString.data(),MAXLEN,fmt.c_str(),pTime);
-      if (is_missing(data.tair[i]))
+      if (const char* msg = missing_input_message(data, i))
       {
-        std::cout << "2m temperature missing at " << timeString.data() << " " << lParameters.lat
-                  << " " << lParameters.lon << std::endl;
-        success=false;
-        return data;
-      }
-      if (is_missing(data.Rhz[i]))
-      {
-        std::cout << "RH missing at " << timeString.data() << " " << lParameters.lat << " "
-                  << lParameters.lon << std::endl;
-        success=false;
-        return data;
-      }
-      if (is_missing(data.prec[i]))
-      {
-        std::cout << "Precipitation missing at " << timeString.data() << " " << lParameters.lat
-                  << " " << lParameters.lon << std::endl;
-        success=false;
-        return data;
-      }
-      if (is_missing(data.SW[i]))
-      {
-        std::cout << "SW missing at " << timeString.data() << " " << lParameters.lat << " "
-                  << lParameters.lon << std::endl;
-        success=false;
-        return data;
-      }
-      if (is_missing(data.LW[i]))
-      {
-        std::cout << "LW missing at " << timeString.data() << " " << lParameters.lat << " "
-                  << lParameters.lon << std::endl;
-        success=false;
-        return data;
-      }
-      if (is_missing(data.VZ[i]))
-      {
-        std::cout << "VZ missing at  " << timeString.data() << " " << lParameters.lat << " "
-                  << lParameters.lon << std::endl;
+        std::cout << msg << timeString.data() << " " << lParameters.lat << " " << lParameters.lon
+                  << std::endl;
         success=false;
         return data;
       }
