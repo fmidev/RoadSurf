@@ -69,7 +69,7 @@ The library is a single shared object (`libroadsurf.so`) with a Fortran module h
 
 `RoadSurfVariables` -> `RoadSurf` -> all submodules (BalanceModel, BoundaryLayer, Cond, Coupling, etc.)
 
-This is explicitly declared in the Makefile dependency rules (lines 76-87).
+This is explicitly declared in the Makefile dependency rules.
 
 ## Language and compiler notes
 
