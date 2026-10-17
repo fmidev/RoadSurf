@@ -1,7 +1,7 @@
 %define NAME roadsurf
 Summary: Road surface weather model
 Name: %{NAME}
-Version: 1.7.3
+Version: 1.7.4
 Release: 1%{?dist}.fmi
 License: MIT
 Group: Development/Tools
@@ -53,6 +53,11 @@ Road surface weather model development files
 %{_includedir}/roadsurf/Constants.h
 
 %changelog
+* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 1.7.4-1.fmi
+- example2 QueryDataSource: interpolate grid temperature and humidity for the derived dewpoint
+- example2 SmartMetSource: do not reuse cached station data of another location or source
+- Split functions with a cognitive complexity above 25 into smaller helpers, no functional changes
+
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 1.7.3-1.fmi
 - Examples use std::abs: the integer abs truncated floating point differences in the spike tests
 - example1 WorkQueue gives every worker thread a copy of the work function, later threads
