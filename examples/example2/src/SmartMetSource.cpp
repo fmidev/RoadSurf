@@ -61,7 +61,15 @@ void append_field(std::string& pFields, const std::string& pField)
 // Throw if the server response is not OK
 void check_response(const cpr::Response& response)
 {
-  check_response(response);
+  if (response.status_code != 200)
+  {
+    std::string msg = "Failed to retrieve data from SmartMet server. Status code = " +
+                      std::to_string(response.status_code) + ".Headers:";
+    for (const auto& name_value : response.header)  // NOLINT(cppcheck-useStlAlgorithm)
+      msg += "\n\t" + name_value.first + " : " + name_value.second;
+
+    throw std::runtime_error(msg);
+  }
 }
 
 // The member of the weather struct for the parameter, or nullptr if there is none
@@ -396,15 +404,7 @@ void SmartMetSource::Impl::read_data(const cpr::Url& pUrl, const cpr::Parameters
     response = cpr::Get(pUrl, pParams);
   }
 
-  if (response.status_code != 200)
-  {
-    std::string msg = "Failed to retrieve data from SmartMet server. Status code = " +
-                      std::to_string(response.status_code) + ".Headers:";
-    for (const auto& name_value : response.header)  // NOLINT(cppcheck-useStlAlgorithm)
-      msg += "\n\t" + name_value.first + " : " + name_value.second;
-
-    throw std::runtime_error(msg);
-  }
+  check_response(response);
 
   if (response.text.empty())
   {
